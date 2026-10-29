@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+:root {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  /* Theme System Colors */
+  --color-navy-dark: #0a1128;
+  --color-navy-main: #001f54;
+  --color-navy-light: #034078;
+  --color-accent-blue: #1282a2;
+  --color-accent-hover: #0a1128;
+
+  --bg-primary: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+
+  /* Dynamic Accent Overrides */
+  --dynamic-accent: #2563eb;
+  --dynamic-accent-hover: #1d4ed8;
+}
+
+.dark {
+  --bg-primary: #030712;
+  --bg-card: #0f172a;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+.bg-dynamic-accent {
+  background-color: var(--dynamic-accent);
+}
+
+.text-dynamic-accent {
+  color: var(--dynamic-accent);
+}
+
+.border-dynamic-accent {
+  border-color: var(--dynamic-accent);
+}
+
+/* Glassmorphism utils */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+}
