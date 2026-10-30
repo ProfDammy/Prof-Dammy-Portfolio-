@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { Shield } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -17,13 +18,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return
     }
 
-    const session = localStorage.getItem('profdammy_admin_session')
-    if (!session) {
+    const checkSession = async () => {
+      // 1. Verify Supabase Auth active session
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        setAuthorized(true)
+        setChecking(false)
+        return
+      }
+
+      // 2. Check stored session fallback
+      const session = localStorage.getItem('profdammy_admin_session')
+      if (session) {
+        setAuthorized(true)
+        setChecking(false)
+        return
+      }
+
+      // Unauthenticated -> redirect to login
       router.push('/admin/login')
-    } else {
-      setAuthorized(true)
-      setChecking(false)
     }
+
+    checkSession()
   }, [pathname, router])
 
   if (pathname === '/admin/login') {

@@ -3,7 +3,8 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Lock, Mail, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react'
+import { Shield, AlertCircle, CheckCircle } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -11,30 +12,57 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [demoSuccess, setDemoSuccess] = useState(false)
+  const [success, setSuccess] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
-    setTimeout(() => {
-      if (email === 'admin@profdammy.com' || email.includes('admin') || password === 'admin123') {
-        setDemoSuccess(true)
+    try {
+      // Authenticate via Supabase Auth
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (authError) {
+        // Fallback for offline demo mode or invalid credentials
+        if (email === 'admin@profdammy.com' && password === 'admin123') {
+          setSuccess(true)
+          localStorage.setItem('profdammy_admin_session', JSON.stringify({
+            authenticated: true,
+            email,
+            role: 'admin',
+            loginTime: new Date().toISOString()
+          }))
+          setTimeout(() => {
+            router.push('/admin')
+          }, 800)
+          return
+        }
+        setError(authError.message || 'Invalid admin credentials.')
+        setLoading(false)
+        return
+      }
+
+      if (data?.session) {
+        setSuccess(true)
         localStorage.setItem('profdammy_admin_session', JSON.stringify({
           authenticated: true,
-          email,
-          role: 'authorized_administrator',
+          email: data.user.email,
+          role: data.user.app_metadata?.role || data.user.user_metadata?.role || 'admin',
           loginTime: new Date().toISOString()
         }))
         setTimeout(() => {
           router.push('/admin')
         }, 800)
-      } else {
-        setError('Invalid admin credentials. Please try demo login: admin@profdammy.com / admin123')
-        setLoading(false)
       }
-    }, 1000)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An error occurred during sign in.'
+      setError(message)
+      setLoading(false)
+    }
   }
 
   return (
@@ -57,7 +85,7 @@ export default function AdminLoginPage() {
           </div>
         )}
 
-        {demoSuccess && (
+        {success && (
           <div className="p-3.5 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>Authorization granted! Redirecting...</span>

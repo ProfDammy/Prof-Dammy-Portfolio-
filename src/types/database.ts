@@ -28,6 +28,7 @@ export interface Profile {
     [key: string]: string | undefined
   } | null
   cv_url: string | null
+  published?: boolean
   created_at: string
   updated_at: string
 }
