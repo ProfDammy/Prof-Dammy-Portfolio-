@@ -1,19 +1,21 @@
--- Seed Data for Prof Dammy's Portfolio Platform
+-- Seed Data for Prof Dammy's Portfolio Platform (Verified Information Only)
 
 INSERT INTO public.profiles (
-  id, full_name, professional_title, bio, detailed_about, avatar_url, hero_media_url, contact_email, location, social_links, cv_url
+  id, full_name, professional_title, bio, detailed_about, avatar_url, hero_media_url, contact_email, contact_phone, location, social_links, cv_url, published
 ) VALUES (
   'a0000000-0000-0000-0000-000000000001',
   'Damilola Miracle Oluwagbamila',
   'Data Analysis Instructor | AI & Software Solutions Developer | Academic Researcher',
-  'Data Analytics Specialist, Educator, and Tech Leader dedicated to transforming complex data into actionable intelligence and mentoring the next generation of tech innovators.',
-  'Damilola Miracle Oluwagbamila, known professionally as Prof Dammy, is an experienced Data Analysis Instructor, AI/Software Solutions Developer, and Community Leader. With a strong foundation in statistics, business intelligence, data science, and technical education, he leads data analytics training at SQI College of ICT while actively contributing to academic research, software development, and youth empowerment initiatives like the Creative Thinkers Forum.',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+  'Data Analytics Specialist, Educator, and Tech Leader dedicated to transforming complex data into actionable intelligence and mentoring next-generation tech talent.',
+  'Damilola Miracle Oluwagbamila, known professionally as Prof Dammy, is a Data Analysis Instructor, AI/Software Solutions Developer, and Community Leader. With a foundation in mathematics, data analytics, and software development, he teaches data analytics at SQI College of ICT while contributing to community empowerment through the Creative Thinkers Forum.',
+  NULL,
   'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
-  'profdammy@example.com',
-  'Ogbomoso, Oyo State, Nigeria',
+  'contact@profdammy.com',
+  NULL,
+  'Oyo State, Nigeria',
   '{"github": "https://github.com/profdammy", "linkedin": "https://linkedin.com/in/damilola-oluwagbamila", "twitter": "https://twitter.com/prof_dammy", "google_scholar": "https://scholar.google.com"}'::jsonb,
-  '/documents/Damilola_Oluwagbamila_CV.pdf'
+  '/documents/Damilola_Oluwagbamila_CV.pdf',
+  true
 ) ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.site_settings (
@@ -21,7 +23,7 @@ INSERT INTO public.site_settings (
 ) VALUES (
   'b0000000-0000-0000-0000-000000000001',
   '#2563eb',
-  'Bridging Data Science, Intelligent Software & Empowering Tech Talent',
+  'Transforming Data into Intelligence & Empowering Next-Gen Innovators',
   'Data Analysis Instructor at SQI College of ICT | AI Solutions Developer | Founder of Creative Thinkers Forum',
   'Explore Projects',
   '#projects',
@@ -29,21 +31,21 @@ INSERT INTO public.site_settings (
   '#cv'
 ) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO public.experiences (title, company, location, employment_type, start_date, is_current, description, technologies, display_order) VALUES
+INSERT INTO public.experiences (title, company, location, employment_type, start_date, is_current, description, technologies, display_order, published) VALUES
 (
   'Data Analysis Instructor',
   'SQI College of ICT',
-  'Ogbomoso, Nigeria',
+  'Oyo State, Nigeria',
   'Full-time',
   '2023-01-01',
   true,
   ARRAY[
-    'Design and deliver comprehensive curriculums covering Python for Data Science, SQL, Power BI, Advanced Excel, and Statistical Analysis.',
-    'Mentor over 200+ students through hands-on data analytics capstones and practical industry projects.',
-    'Optimize student learning outcomes with real-world case studies in business intelligence and predictive modeling.'
+    'Design and deliver curriculums covering Python for Data Science, SQL, Power BI, Advanced Excel, and Statistical Analysis.',
+    'Mentor students through practical data analytics capstones and business intelligence projects.'
   ],
   ARRAY['Python', 'SQL', 'Power BI', 'Pandas', 'NumPy', 'Excel', 'PostgreSQL'],
-  1
+  1,
+  true
 ),
 (
   'Founder & Convener',
@@ -53,25 +55,25 @@ INSERT INTO public.experiences (title, company, location, employment_type, start
   '2022-05-01',
   true,
   ARRAY[
-    'Establish and lead a vibrant community focused on youth empowerment, digital skills acquisition, and innovation.',
-    'Organize technical workshops, hackathons, and mentorship sessions reaching hundreds of aspiring tech professionals.',
-    'Drive strategic partnerships with ICT institutions and community stakeholders.'
+    'Establish and lead a community focused on youth empowerment, digital skills acquisition, and innovation.',
+    'Organize technical workshops, seminars, and mentorship sessions for aspiring tech professionals.'
   ],
   ARRAY['Community Leadership', 'Mentorship', 'Strategic Planning', 'Public Speaking'],
-  2
+  2,
+  true
 );
 
-INSERT INTO public.skills (category, name, proficiency_level, icon_name, description, display_order) VALUES
-('Data Analytics & BI', 'Power BI & Tableau', 95, 'BarChart3', 'Interactive dashboard design, DAX formulas, data modeling, and automated ETL.', 1),
-('Data Analytics & BI', 'SQL & Database Architecture', 92, 'Database', 'Complex queries, schema normalization, analytical queries, and performance indexing.', 2),
-('AI & Software Engineering', 'Next.js & TypeScript', 88, 'Code', 'Full-stack React applications with server actions, Tailwind CSS, and secure REST/GraphQL APIs.', 3);
+INSERT INTO public.skills (category, name, proficiency_level, icon_name, description, display_order, published) VALUES
+('Data Analytics & BI', 'Power BI & Data Visualization', 95, 'BarChart3', 'Interactive dashboard design, DAX formulas, data modeling, and reporting.', 1, true),
+('Data Analytics & BI', 'SQL & Database Querying', 92, 'Database', 'Analytical queries, schema design, and data aggregation.', 2, true),
+('AI & Software Engineering', 'Next.js & TypeScript', 88, 'Code', 'Full-stack Web applications with modern UI, API integrations, and styling.', 3, true);
 
-INSERT INTO public.projects (title, slug, short_description, full_description, category, status, is_featured, image_url, demo_url, github_url, technologies, metrics_highlights, display_order) VALUES
+INSERT INTO public.projects (title, slug, short_description, full_description, category, status, is_featured, image_url, demo_url, github_url, technologies, metrics_highlights, display_order, published) VALUES
 (
   'Educational Performance & Student Analytics Dashboard',
   'student-analytics-dashboard',
-  'Interactive Power BI & SQL dashboard tracking student learning trajectories, assessment trends, and placement metrics at SQI College of ICT.',
-  'Designed a unified reporting and analytics system that ingests student test scores, attendance records, and project completion rates.',
+  'Interactive Power BI & SQL dashboard tracking student learning performance and assessment metrics.',
+  'Designed a unified reporting and analytics system that synthesizes student assessment records and attendance trends.',
   'Data Analytics',
   'completed',
   true,
@@ -79,6 +81,7 @@ INSERT INTO public.projects (title, slug, short_description, full_description, c
   'https://powerbi.microsoft.com',
   'https://github.com/profdammy/student-analytics',
   ARRAY['Power BI', 'SQL', 'Python', 'DAX', 'Excel'],
-  ARRAY['Processed 1,000+ student performance records', 'Improved course completion tracking efficiency by 40%'],
-  1
+  ARRAY['Unified student assessment reporting', 'Automated course tracking'],
+  1,
+  true
 );

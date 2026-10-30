@@ -1,4 +1,5 @@
--- Enable UUID extension
+-- Complete Supabase Database Schema for Prof Dammy Portfolio & CMS Platform
+
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Helper function to automatically set updated_at column
@@ -9,6 +10,20 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Helper function to check administrator authorization
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN (
+    auth.role() = 'authenticated' AND (
+      COALESCE((auth.jwt() -> 'app_metadata' ->> 'role'), '') = 'admin' OR
+      COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') = 'admin' OR
+      LOWER(COALESCE(auth.jwt() ->> 'email', '')) IN ('admin@profdammy.com', 'oluwagbamilad@gmail.com')
+    )
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- 1. Profiles Table
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -24,11 +39,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   location VARCHAR(255),
   social_links JSONB DEFAULT '{}'::jsonb,
   cv_url TEXT,
+  published BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Trigger for public.profiles updated_at
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW
@@ -76,7 +91,6 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Trigger for public.site_settings updated_at
 CREATE TRIGGER update_site_settings_updated_at
   BEFORE UPDATE ON public.site_settings
   FOR EACH ROW
@@ -100,7 +114,6 @@ CREATE TABLE IF NOT EXISTS public.experiences (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Trigger for public.experiences updated_at
 CREATE TRIGGER update_experiences_updated_at
   BEFORE UPDATE ON public.experiences
   FOR EACH ROW
@@ -140,7 +153,6 @@ CREATE TABLE IF NOT EXISTS public.projects (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Trigger for public.projects updated_at
 CREATE TRIGGER update_projects_updated_at
   BEFORE UPDATE ON public.projects
   FOR EACH ROW
@@ -262,7 +274,7 @@ ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.media_assets ENABLE ROW LEVEL SECURITY;
 
 -- Public Read Policies
-CREATE POLICY "Public profiles read" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Public profiles read" ON public.profiles FOR SELECT USING (published = true OR public.is_admin());
 CREATE POLICY "Public site_settings read" ON public.site_settings FOR SELECT USING (true);
 CREATE POLICY "Public experiences read" ON public.experiences FOR SELECT USING (published = true);
 CREATE POLICY "Public skills read" ON public.skills FOR SELECT USING (published = true);
@@ -276,41 +288,41 @@ CREATE POLICY "Public achievements read" ON public.achievements FOR SELECT USING
 CREATE POLICY "Public media_assets read" ON public.media_assets FOR SELECT USING (true);
 
 -- Authenticated Admin Write Policies
-CREATE POLICY "Admin write profiles" ON public.profiles FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write site_settings" ON public.site_settings FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write experiences" ON public.experiences FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write skills" ON public.skills FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write projects" ON public.projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write teaching" ON public.teaching_mentorship FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write leadership" ON public.leadership_community FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write education" ON public.education FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write certifications" ON public.certifications FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write publications" ON public.publications FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write achievements" ON public.achievements FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write media_assets" ON public.media_assets FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin write profiles" ON public.profiles FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write site_settings" ON public.site_settings FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write experiences" ON public.experiences FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write skills" ON public.skills FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write projects" ON public.projects FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write teaching" ON public.teaching_mentorship FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write leadership" ON public.leadership_community FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write education" ON public.education FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write certifications" ON public.certifications FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write publications" ON public.publications FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write achievements" ON public.achievements FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin write media_assets" ON public.media_assets FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
--- Storage bucket configuration for portfolio-media
+-- Storage Bucket Configuration
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('portfolio-media', 'portfolio-media', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Storage policies for portfolio-media bucket
+-- Storage Security Policies for portfolio-media Bucket
 CREATE POLICY "Public Read Access on portfolio-media"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'portfolio-media');
 
-CREATE POLICY "Authenticated Upload Access on portfolio-media"
+CREATE POLICY "Admin Upload Access on portfolio-media"
   ON storage.objects FOR INSERT
   TO authenticated
-  WITH CHECK (bucket_id = 'portfolio-media');
+  WITH CHECK (bucket_id = 'portfolio-media' AND public.is_admin());
 
-CREATE POLICY "Authenticated Update Access on portfolio-media"
+CREATE POLICY "Admin Update Access on portfolio-media"
   ON storage.objects FOR UPDATE
   TO authenticated
-  USING (bucket_id = 'portfolio-media')
-  WITH CHECK (bucket_id = 'portfolio-media');
+  USING (bucket_id = 'portfolio-media' AND public.is_admin())
+  WITH CHECK (bucket_id = 'portfolio-media' AND public.is_admin());
 
-CREATE POLICY "Authenticated Delete Access on portfolio-media"
+CREATE POLICY "Admin Delete Access on portfolio-media"
   ON storage.objects FOR DELETE
   TO authenticated
-  USING (bucket_id = 'portfolio-media');
+  USING (bucket_id = 'portfolio-media' AND public.is_admin());
