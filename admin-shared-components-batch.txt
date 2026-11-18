@@ -1,0 +1,637 @@
+﻿ADMIN SHARED COMPONENTS - SOURCE EXPORT
+
+========================================
+FILE: src\app\admin\layout.tsx
+========================================
+
+
+'use client'
+
+import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { ShieldCheck, ExternalLink, ChevronRight } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
+
+const pageTitles: Record<string, string> = {
+  '/admin': 'Dashboard Overview',
+  '/admin/profile': 'Profile & Bio',
+  '/admin/appearance': 'Site Appearance',
+  '/admin/projects': 'Projects',
+  '/admin/experience': 'Professional Experience',
+  '/admin/skills': 'Skills & Expertise',
+  '/admin/education': 'Education & Certifications',
+  '/admin/teaching': 'Teaching & Mentorship',
+  '/admin/leadership': 'Leadership & Community',
+  '/admin/publications': 'Publications & Research',
+  '/admin/achievements': 'Achievements',
+  '/admin/media': 'Media & Documents',
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: ReactNode
+}) {
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [authorized, setAuthorized] = useState(false)
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    if (pathname === '/admin/login') {
+      setChecking(false)
+      return
+    }
+
+    let active = true
+
+    const verifyAdministrator = async () => {
+      setChecking(true)
+      setAuthorized(false)
+
+      try {
+        const { data, error } = await supabase.auth.getUser()
+
+        if (error) throw error
+
+        const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL
+          ?.trim()
+          .toLowerCase()
+
+        const userEmail = data.user?.email?.toLowerCase()
+
+        const isAdmin =
+          !!adminEmail &&
+          !!data.user &&
+          userEmail === adminEmail &&
+          !!data.user.email_confirmed_at
+
+        if (!isAdmin) {
+          await supabase.auth.signOut()
+
+          if (active) {
+            router.replace('/admin/login')
+          }
+
+          return
+        }
+
+        if (active) {
+          setAuthorized(true)
+        }
+      } catch (error) {
+        console.error('Administrator verification failed:', error)
+
+        if (active) {
+          router.replace('/admin/login')
+        }
+      } finally {
+        if (active) {
+          setChecking(false)
+        }
+      }
+    }
+
+    verifyAdministrator()
+
+    return () => {
+      active = false
+    }
+  }, [pathname, router])
+
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
+
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+            <ShieldCheck size={27} />
+          </div>
+
+          <div className="mt-5 h-6 w-6 animate-spin rounded-full border-[3px] border-blue-100 border-t-blue-700" />
+
+          <p className="mt-4 text-sm font-semibold text-slate-700">
+            Verifying administrator access
+          </p>
+
+          <p className="mt-1 text-xs text-slate-400">
+            Please wait while your workspace loads.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!authorized) return null
+
+  const pageTitle = pageTitles[pathname] || 'Admin Workspace'
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800">
+      <AdminSidebar />
+
+      <div className="min-h-screen lg:pl-[280px]">
+        <header className="sticky top-0 z-30 flex h-[76px] items-center justify-between border-b border-slate-200/80 bg-white/95 pl-[76px] pr-4 backdrop-blur-md sm:pr-6 lg:px-8">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-[11px] font-medium text-slate-400">
+              <span>Portfolio CMS</span>
+              <ChevronRight size={12} />
+              <span className="truncate text-slate-500">
+                Admin Workspace
+              </span>
+            </div>
+
+            <h1 className="mt-1 truncate text-[17px] font-bold tracking-tight text-slate-900 sm:text-lg">
+              {pageTitle}
+            </h1>
+          </div>
+
+          <div className="ml-4 flex shrink-0 items-center gap-3">
+            <div className="hidden items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 sm:flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[11px] font-semibold text-emerald-700">
+                Workspace active
+              </span>
+            </div>
+
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+            >
+              <span className="hidden sm:inline">View website</span>
+              <ExternalLink size={14} />
+            </Link>
+          </div>
+        </header>
+
+        <main className="mx-auto w-full max-w-[1700px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
+          {children}
+        </main>
+      </div>
+    </div>
+  )
+}
+
+========================================
+FILE: src\components\admin\AdminSidebar.tsx
+========================================
+
+
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import {
+  LayoutDashboard,
+  User,
+  Briefcase,
+  Wrench,
+  FolderGit2,
+  GraduationCap,
+  Award,
+  BookOpen,
+  Trophy,
+  ImageIcon,
+  Palette,
+  LogOut,
+  Globe,
+  Users2,
+  Menu,
+  X,
+  ChevronRight,
+  Settings2,
+  type LucideIcon,
+} from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
+
+type NavItem = {
+  label: string
+  href: string
+  icon: LucideIcon
+}
+
+const navGroups: { title: string; items: NavItem[] }[] = [
+  {
+    title: 'Overview',
+    items: [
+      { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: 'Workspace settings',
+    items: [
+      { label: 'Profile & Bio', href: '/admin/profile', icon: User },
+      { label: 'Site Appearance', href: '/admin/appearance', icon: Palette },
+    ],
+  },
+  {
+    title: 'Portfolio content',
+    items: [
+      { label: 'Projects', href: '/admin/projects', icon: FolderGit2 },
+      { label: 'Experience', href: '/admin/experience', icon: Briefcase },
+      { label: 'Skills & Expertise', href: '/admin/skills', icon: Wrench },
+      { label: 'Education & Certifications', href: '/admin/education', icon: GraduationCap },
+      { label: 'Teaching & Mentorship', href: '/admin/teaching', icon: BookOpen },
+      { label: 'Leadership & Community', href: '/admin/leadership', icon: Users2 },
+      { label: 'Publications & Research', href: '/admin/publications', icon: Award },
+      { label: 'Achievements', href: '/admin/achievements', icon: Trophy },
+      { label: 'Media & Documents', href: '/admin/media', icon: ImageIcon },
+    ],
+  },
+]
+
+export function AdminSidebar() {
+  const pathname = usePathname()
+  const router = useRouter()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  const isActive = (href: string) => {
+    if (href === '/admin') return pathname === '/admin'
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
+  const closeMobileMenu = () => setMobileOpen(false)
+
+  const handleLogout = async () => {
+    if (loggingOut) return
+
+    setLoggingOut(true)
+
+    try {
+      await supabase.auth.signOut()
+    } catch (error) {
+      console.error('Sign out error:', error)
+    } finally {
+      localStorage.removeItem('profdammy_admin_session')
+      router.replace('/admin/login')
+      router.refresh()
+    }
+  }
+
+  return (
+    <>
+      {/* Mobile menu trigger */}
+      <button
+        type="button"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open navigation menu"
+        aria-expanded={mobileOpen}
+        className="fixed left-4 top-4 z-[60] flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
+      >
+        <Menu size={21} />
+      </button>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={closeMobileMenu}
+          className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-[2px] lg:hidden"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+        }`}
+      >
+        {/* Brand */}
+        <div className="flex h-[76px] shrink-0 items-center justify-between border-b border-slate-100 px-6">
+          <Link
+            href="/admin"
+            onClick={closeMobileMenu}
+            className="flex items-center gap-3"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-700 text-white shadow-sm shadow-blue-200">
+              <Settings2 size={21} />
+            </div>
+
+            <div>
+              <p className="text-[15px] font-bold tracking-tight text-slate-900">
+                Prof Dammy
+              </p>
+              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                Portfolio CMS
+              </p>
+            </div>
+          </Link>
+
+          <button
+            type="button"
+            onClick={closeMobileMenu}
+            aria-label="Close navigation menu"
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 lg:hidden"
+          >
+            <X size={19} />
+          </button>
+        </div>
+
+        {/* Workspace identity */}
+        <div className="mx-4 mt-5 rounded-xl border border-blue-100 bg-blue-50/70 p-3.5">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-blue-700 shadow-sm">
+              <User size={16} />
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-800">
+                Administrator
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Portfolio workspace
+              </p>
+            </div>
+
+            <span className="ml-auto h-2 w-2 rounded-full bg-emerald-500" />
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6">
+          {navGroups.map((group) => (
+            <div key={group.title}>
+              <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                {group.title}
+              </p>
+
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon
+                  const active = isActive(item.href)
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={closeMobileMenu}
+                      aria-current={active ? 'page' : undefined}
+                      className={`group flex min-h-10 items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition ${
+                        active
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      }`}
+                    >
+                      <Icon
+                        size={17}
+                        strokeWidth={active ? 2.3 : 1.8}
+                        className={
+                          active
+                            ? 'text-blue-700'
+                            : 'text-slate-400 group-hover:text-slate-600'
+                        }
+                      />
+
+                      <span className="min-w-0 flex-1">{item.label}</span>
+
+                      {active && (
+                        <ChevronRight
+                          size={15}
+                          className="shrink-0 text-blue-600"
+                        />
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer actions */}
+        <div className="shrink-0 border-t border-slate-100 p-4">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-700"
+          >
+            <Globe size={17} className="text-slate-400" />
+            <span className="flex-1">View public website</span>
+            <ChevronRight size={14} className="text-slate-300" />
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <LogOut size={17} />
+            {loggingOut ? 'Signing out...' : 'Sign out'}
+          </button>
+
+          <p className="mt-4 px-3 text-[10px] text-slate-400">
+            Portfolio Management Workspace
+          </p>
+        </div>
+      </aside>
+    </>
+  )
+}
+
+========================================
+FILE: src\components\admin\FeedbackAlert.tsx
+========================================
+
+'use client'
+
+import React from 'react'
+import { AlertCircle, CheckCircle2, Loader2, X } from 'lucide-react'
+
+interface FeedbackAlertProps {
+  type: 'success' | 'error' | 'loading'
+  message: string
+  onClose?: () => void
+}
+
+export function FeedbackAlert({ type, message, onClose }: FeedbackAlertProps) {
+  if (!message) return null
+
+  if (type === 'loading') {
+    return (
+      <div className="flex items-center gap-3 p-3.5 rounded-xl bg-blue-950/70 border border-blue-800 text-blue-200 text-xs shadow-md">
+        <Loader2 className="w-4 h-4 animate-spin text-blue-400 shrink-0" />
+        <span className="flex-1">{message}</span>
+      </div>
+    )
+  }
+
+  if (type === 'error') {
+    return (
+      <div className="flex items-center gap-3 p-3.5 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-200 text-xs shadow-md">
+        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+        <span className="flex-1 font-medium">{message}</span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="text-rose-400 hover:text-rose-200 transition-colors p-1"
+            title="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-emerald-200 text-xs shadow-md">
+      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+      <span className="flex-1 font-medium">{message}</span>
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="text-emerald-400 hover:text-emerald-200 transition-colors p-1"
+          title="Dismiss"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  )
+}
+
+========================================
+FILE: src\components\admin\RecordModal.tsx
+========================================
+
+'use client'
+
+import React from 'react'
+import { X } from 'lucide-react'
+
+interface RecordModalProps {
+  isOpen: boolean
+  title: string
+  subtitle?: string
+  maxWidth?: string
+  onClose: () => void
+  children: React.ReactNode
+}
+
+export function RecordModal({
+  isOpen,
+  title,
+  subtitle,
+  maxWidth = 'max-w-2xl',
+  onClose,
+  children
+}: RecordModalProps) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+      <div className={`relative w-full ${maxWidth} my-8 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-800/80 bg-slate-900/90 sticky top-0 z-10">
+          <div>
+            <h2 className="text-lg font-bold text-white">{title}</h2>
+            {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+========================================
+FILE: src\components\admin\DeleteConfirmModal.tsx
+========================================
+
+'use client'
+
+import React from 'react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
+
+interface DeleteConfirmModalProps {
+  isOpen: boolean
+  title?: string
+  description?: string
+  itemName?: string
+  loading?: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}
+
+export function DeleteConfirmModal({
+  isOpen,
+  title = 'Delete Record',
+  description = 'Are you sure you want to delete this record? This action cannot be undone.',
+  itemName,
+  loading = false,
+  onConfirm,
+  onCancel
+}: DeleteConfirmModalProps) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-rose-950/80 border border-rose-800/80 flex items-center justify-center text-rose-400 shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-white">{title}</h3>
+            <p className="text-xs text-slate-300 leading-relaxed">{description}</p>
+            {itemName && (
+              <p className="text-xs font-mono text-blue-300 bg-slate-950 px-2 py-1 rounded-md inline-block mt-1">
+                &ldquo;{itemName}&rdquo;
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/80">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={onCancel}
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition-colors flex items-center gap-1.5 shadow-lg shadow-rose-600/20 disabled:opacity-50"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Confirm Delete'
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

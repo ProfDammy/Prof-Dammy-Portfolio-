@@ -1,7 +1,8 @@
+
 'use client'
 
 import React from 'react'
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
 
 interface DeleteConfirmModalProps {
   isOpen: boolean
@@ -20,50 +21,79 @@ export function DeleteConfirmModal({
   itemName,
   loading = false,
   onConfirm,
-  onCancel
+  onCancel,
 }: DeleteConfirmModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-950/80 border border-rose-800/80 flex items-center justify-center text-rose-400 shrink-0">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-base font-bold text-white">{title}</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">{description}</p>
-            {itemName && (
-              <p className="text-xs font-mono text-blue-300 bg-slate-950 px-2 py-1 rounded-md inline-block mt-1">
-                &ldquo;{itemName}&rdquo;
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[3px]">
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-modal-title"
+        aria-describedby="delete-modal-description"
+        className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/15"
+      >
+        {/* Warning header */}
+        <div className="border-b border-slate-100 px-6 pb-5 pt-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-600">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h3
+                id="delete-modal-title"
+                className="text-base font-bold text-[#142D50]"
+              >
+                {title}
+              </h3>
+
+              <p
+                id="delete-modal-description"
+                className="mt-1.5 text-sm leading-relaxed text-slate-600"
+              >
+                {description}
               </p>
-            )}
+
+              {itemName && (
+                <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="break-words font-mono text-xs font-medium text-slate-700">
+                    &ldquo;{itemName}&rdquo;
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/80">
+        {/* Actions */}
+        <div className="flex flex-col-reverse gap-2 bg-slate-50/70 px-6 py-4 sm:flex-row sm:justify-end sm:gap-3">
           <button
             type="button"
             disabled={loading}
             onClick={onCancel}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cancel
           </button>
+
           <button
             type="button"
             disabled={loading}
             onClick={onConfirm}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition-colors flex items-center gap-1.5 shadow-lg shadow-rose-600/20 disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-xs font-semibold text-white shadow-sm shadow-rose-600/15 transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Deleting...
               </>
             ) : (
-              'Confirm Delete'
+              <>
+                <Trash2 className="h-4 w-4" />
+                Confirm Delete
+              </>
             )}
           </button>
         </div>

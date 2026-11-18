@@ -1,3 +1,4 @@
+
 'use client'
 
 import React from 'react'
@@ -18,30 +19,50 @@ export function RecordModal({
   subtitle,
   maxWidth = 'max-w-2xl',
   onClose,
-  children
+  children,
 }: RecordModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-      <div className={`relative w-full ${maxWidth} my-8 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-800/80 bg-slate-900/90 sticky top-0 z-10">
-          <div>
-            <h2 className="text-lg font-bold text-white">{title}</h2>
-            {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-slate-950/45 p-3 backdrop-blur-[3px] sm:p-5"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="record-modal-title"
+        className={`relative my-auto flex max-h-[92vh] w-full ${maxWidth} flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/15`}
+      >
+        {/* Modal header */}
+        <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+          <div className="min-w-0">
+            <h2
+              id="record-modal-title"
+              className="text-lg font-bold tracking-tight text-[#142D50]"
+            >
+              {title}
+            </h2>
+
+            {subtitle && (
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                {subtitle}
+              </p>
+            )}
           </div>
+
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+            aria-label="Close dialog"
+            title="Close"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+        {/* Modal content */}
+        <div className="min-h-0 flex-1 overflow-y-auto bg-white p-5 sm:p-6">
           {children}
         </div>
       </div>

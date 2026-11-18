@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@icons-pack/react-simple-icons": "^13.15.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "clsx": "^2.1.1",
@@ -18,6 +19,8 @@
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "react-easy-crop": "^6.2.4",
+    "react-icons": "^5.7.0",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {

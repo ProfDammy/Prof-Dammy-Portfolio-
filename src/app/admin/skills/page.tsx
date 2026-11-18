@@ -167,6 +167,10 @@ export default function AdminSkillsPage() {
       setSkills((prev) =>
         prev.map((s) => (s.id === skill.id ? { ...s, published: updatedStatus } : s))
       )
+      setFeedback({
+        type: 'success',
+        message: `Skill "${skill.name}" ${updatedStatus ? 'published' : 'moved to draft'} successfully.`
+      })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Status toggle failed'
       setFeedback({ type: 'error', message: `Could not toggle status: ${msg}` })
@@ -174,23 +178,13 @@ export default function AdminSkillsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Wrench className="w-6 h-6 text-blue-500" />
-            Skills Manager
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Configure technical proficiencies, tools, categories, and proficiency bars.
-          </p>
-        </div>
-
+    <div className="space-y-5 mx-auto w-full max-w-6xl pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={fetchSkills}
-            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Reload
           </button>
@@ -205,54 +199,58 @@ export default function AdminSkillsPage() {
       </div>
 
       {feedback && (
-        <FeedbackAlert
-          type={feedback.type}
-          message={feedback.message}
-          onClose={() => setFeedback(null)}
-        />
+        <div className="pointer-events-none fixed right-4 top-4 z-[100] w-[calc(100%-2rem)] max-w-md sm:right-6 sm:top-6">
+          <div className="pointer-events-auto rounded-2xl shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5">
+            <FeedbackAlert
+              type={feedback.type}
+              message={feedback.message}
+              onClose={() => setFeedback(null)}
+            />
+          </div>
+        </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {loading ? (
           <FeedbackAlert type="loading" message="Loading skills from Supabase database..." />
         ) : skills.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-3">
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 text-center space-y-3">
             <Wrench className="w-10 h-10 text-slate-600 mx-auto" />
-            <p className="text-sm font-semibold text-white">No skills records found</p>
-            <p className="text-xs text-slate-400">Click &ldquo;Add Skill&rdquo; to insert your capabilities.</p>
+            <p className="text-sm font-semibold text-slate-900">No skills records found</p>
+            <p className="text-xs text-slate-600">Click &ldquo;Add Skill&rdquo; to insert your capabilities.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {skills.map((skill) => (
               <div
                 key={skill.id}
-                className={`p-4 rounded-2xl bg-slate-900 border transition-all ${
+                className={`p-4 rounded-2xl bg-white border transition-all ${
                   skill.published
-                    ? 'border-slate-800 hover:border-slate-700'
-                    : 'border-slate-800/50 opacity-70 bg-slate-950/40'
+                    ? 'border-slate-200 hover:border-slate-300'
+                    : 'border-slate-200 opacity-70 bg-slate-50'
                 } flex flex-col justify-between gap-3`}
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                       {skill.category}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">
+                    <span className="text-[10px] font-mono text-slate-600">
                       Order: {skill.display_order}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white">{skill.name}</h3>
+                    <h3 className="text-sm font-bold text-slate-900">{skill.name}</h3>
                     {skill.proficiency_level && (
-                      <span className="text-xs font-bold text-blue-400">
+                      <span className="text-xs font-semibold text-blue-700">
                         {skill.proficiency_level}%
                       </span>
                     )}
                   </div>
 
                   {skill.proficiency_level && (
-                    <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                    <div className="w-full bg-slate-50 h-2 rounded-full overflow-hidden border border-slate-200">
                       <div
                         className="bg-blue-600 h-full rounded-full transition-all duration-300"
                         style={{ width: `${skill.proficiency_level}%` }}
@@ -261,20 +259,20 @@ export default function AdminSkillsPage() {
                   )}
 
                   {skill.description && (
-                    <p className="text-xs text-slate-400 line-clamp-2">
+                    <p className="text-xs text-slate-600 line-clamp-2">
                       {skill.description}
                     </p>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => handleTogglePublish(skill)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors border ${
                       skill.published
-                        ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800 hover:bg-emerald-900/60'
-                        : 'bg-slate-950 text-slate-500 border-slate-800 hover:text-slate-300'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:text-slate-700'
                     }`}
                   >
                     {skill.published ? (
@@ -292,7 +290,7 @@ export default function AdminSkillsPage() {
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(skill)}
-                      className="p-1.5 rounded-lg bg-slate-950 hover:bg-blue-950 text-blue-400 hover:text-blue-300 border border-slate-800 transition-colors"
+                      className="p-1.5 rounded-lg bg-slate-50 hover:bg-blue-50 text-blue-700 hover:text-blue-700 border border-slate-200 transition-colors"
                       title="Edit skill"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -300,7 +298,7 @@ export default function AdminSkillsPage() {
                     <button
                       type="button"
                       onClick={() => setDeletingSkill(skill)}
-                      className="p-1.5 rounded-lg bg-slate-950 hover:bg-rose-950 text-rose-400 hover:text-rose-300 border border-slate-800 transition-colors"
+                      className="p-1.5 rounded-lg bg-slate-50 hover:bg-rose-50 text-rose-700 hover:text-rose-800 border border-slate-200 transition-colors"
                       title="Delete skill"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -320,11 +318,11 @@ export default function AdminSkillsPage() {
         maxWidth="max-w-xl"
         onClose={() => setModalOpen(false)}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Skill Name <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Skill Name <span className="text-rose-700">*</span>
               </label>
               <input
                 type="text"
@@ -332,13 +330,13 @@ export default function AdminSkillsPage() {
                 value={formData.name || ''}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Power BI & DAX"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Category <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Category <span className="text-rose-700">*</span>
               </label>
               <input
                 type="text"
@@ -346,14 +344,14 @@ export default function AdminSkillsPage() {
                 value={formData.category || ''}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 placeholder="e.g. Data Analytics & BI"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Proficiency Level (1-100)
               </label>
               <input
@@ -361,47 +359,47 @@ export default function AdminSkillsPage() {
                 min="1"
                 max="100"
                 value={formData.proficiency_level ?? 85}
-                onChange={(e) => setFormData({ ...formData, proficiency_level: Number(e.target.value) })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                onChange={(e) => setFormData({ ...formData, proficiency_level: e.target.value === "" ? null : Math.min(100, Math.max(1, Number(e.target.value))) })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Icon Name
               </label>
               <input
                 type="text"
                 value={formData.icon_name || ''}
-                onChange={(e) => setFormData({ ...formData, icon_name: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, icon_name: e.target.value})}
                 placeholder="BarChart3, Database..."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Display Order
               </label>
               <input
                 type="number"
                 value={formData.display_order ?? 0}
                 onChange={(e) => setFormData({ ...formData, display_order: Number(e.target.value) })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Description / Tool Overview
             </label>
             <textarea
               rows={3}
               value={formData.description || ''}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value})}
               placeholder="Interactive dashboard design, DAX formulas, data modeling..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
             />
           </div>
 
@@ -411,18 +409,18 @@ export default function AdminSkillsPage() {
                 type="checkbox"
                 checked={formData.published !== false}
                 onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-                className="w-4 h-4 rounded text-blue-600 bg-slate-950 border-slate-800 focus:ring-0"
+                className="w-4 h-4 rounded text-blue-600 bg-slate-50 border-slate-200 focus:ring-0"
               />
-              <span className="text-xs font-semibold text-slate-300">Publish on public portfolio</span>
+              <span className="text-xs font-semibold text-slate-700">Publish on public portfolio</span>
             </label>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               disabled={saving}
               onClick={() => setModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900"
             >
               Cancel
             </button>
@@ -448,4 +446,4 @@ export default function AdminSkillsPage() {
       />
     </div>
   )
-}
+} 

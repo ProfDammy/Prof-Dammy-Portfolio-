@@ -1,32 +1,47 @@
-'use client'
 
 import React from 'react'
-import { Profile } from '@/types/database'
-import { User } from 'lucide-react'
+import type { Profile } from '@/types/database'
+import { UserRound } from 'lucide-react'
 
 interface AboutSectionProps {
   profile: Profile
 }
 
 export function AboutSection({ profile }: AboutSectionProps) {
-  return (
-    <section id="about" className="py-20 bg-slate-900 text-white relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950 border border-blue-800/60 text-blue-400 text-xs font-semibold tracking-wider uppercase">
-            <User className="w-3.5 h-3.5" />
-            Professional Biography
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            About Prof Dammy
-          </h2>
-        </div>
+  const biography =
+    profile.detailed_about ||
+    profile.bio ||
+    'Biography information is currently unavailable.'
 
-        <div className="bg-slate-950/60 border border-slate-800 p-8 rounded-2xl space-y-6">
-          <p className="text-slate-300 text-base leading-relaxed whitespace-pre-line">
-            {profile.detailed_about || profile.bio}
+  return (
+    <section id="about" className="bg-white py-16 md:py-20">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 lg:px-10">
+
+        <div className="max-w-3xl mx-auto text-center mb-12">
+          <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-blue-700">
+            <UserRound className="w-4 h-4" />
+            Professional Biography
+          </span>
+
+          <h2 className="mt-5 text-3xl sm:text-4xl font-bold tracking-tight text-slate-950">
+            About Me
+          </h2>
+
+          <p className="mt-4 text-base text-slate-600 leading-7">
+            A closer look at my background, interests and professional journey.
           </p>
         </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 md:p-12">
+          <div className="max-w-3xl mx-auto">
+            <div className="w-12 h-1 rounded-full bg-blue-700 mb-7" />
+
+            <p className="text-base sm:text-lg leading-8 text-slate-700 whitespace-pre-line">
+              {biography}
+            </p>
+          </div>
+        </div>
+
       </div>
     </section>
   )

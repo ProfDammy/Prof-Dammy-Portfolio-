@@ -72,7 +72,7 @@ export default function AdminPublicationsPage() {
       ...initialPublicationForm,
       display_order: items.length + 1
     })
-    setAuthorsText('Damilola Miracle Oluwagbamila')
+    setAuthorsText('Damilola Oluwagbamila')
     setModalOpen(true)
   }
 
@@ -158,18 +158,8 @@ export default function AdminPublicationsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-blue-500" />
-            Publications &amp; Research Manager
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage your peer-reviewed papers, articles, research abstracts, and DOI links.
-          </p>
-        </div>
-
+    <div className="space-y-4 max-w-6xl pb-8">
+      <div className="flex items-center justify-end gap-2 mb-4">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -181,7 +171,7 @@ export default function AdminPublicationsPage() {
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/20 transition-all"
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/20 transition-all"
           >
             <Plus className="w-4 h-4" /> Add Publication
           </button>
@@ -189,72 +179,87 @@ export default function AdminPublicationsPage() {
       </div>
 
       {feedback && (
-        <FeedbackAlert
-          type={feedback.type}
-          message={feedback.message}
-          onClose={() => setFeedback(null)}
-        />
+        <div className="fixed right-4 top-4 z-[100] w-[min(420px,calc(100vw-2rem))]">
+          <FeedbackAlert
+            type={feedback.type}
+            message={feedback.message}
+            onClose={() => setFeedback(null)}
+          />
+        </div>
       )}
 
       <div className="space-y-4">
         {loading ? (
           <FeedbackAlert type="loading" message="Loading research publications..." />
         ) : items.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-3">
+          <div className="p-6 rounded-xl bg-white border border-slate-200 text-center space-y-3">
             <BookOpen className="w-10 h-10 text-slate-600 mx-auto" />
-            <p className="text-sm font-semibold text-white">No research publications found</p>
-            <p className="text-xs text-slate-400">Click &ldquo;Add Publication&rdquo; to publish your scholarly work.</p>
+            <p className="text-sm font-semibold text-slate-900">No research publications found</p>
+            <p className="text-xs text-slate-600">Click &ldquo;Add Publication&rdquo; to publish your scholarly work.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {items.map((item) => (
               <div
                 key={item.id}
-                className={`p-5 rounded-2xl bg-slate-900 border transition-all ${
+                className={`p-4 rounded-xl bg-white border transition-all ${
                   item.published
-                    ? 'border-slate-800 hover:border-slate-700'
-                    : 'border-slate-800/50 opacity-70 bg-slate-950/40'
+                    ? 'border-slate-200 hover:border-blue-200'
+                    : 'border-slate-200 opacity-70 bg-slate-50'
                 } flex flex-col md:flex-row md:items-start justify-between gap-4`}
               >
                 <div className="space-y-2 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200">
                       Order: {item.display_order}
                     </span>
-                    <span className="text-[11px] font-semibold uppercase px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800">
+                    <span className="text-[11px] font-semibold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                       {item.publication_type}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="text-base font-bold text-white">{item.title}</h3>
-                    <p className="text-xs font-semibold text-blue-400">{item.publisher_or_journal}</p>
-                    <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                    <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
+                    <p className="text-xs font-semibold text-blue-700">{item.publisher_or_journal}</p>
+                    <p className="text-[11px] text-slate-600 flex items-center gap-1.5 mt-0.5">
                       <Calendar className="w-3.5 h-3.5 text-slate-500" /> Published: {item.publication_date}
                     </p>
                   </div>
 
                   {item.authors && item.authors.length > 0 && (
-                    <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                    <p className="text-xs text-slate-600 flex items-center gap-1.5">
                       <Users className="w-3.5 h-3.5 text-slate-500" /> {item.authors.join(', ')}
                     </p>
                   )}
 
-                  <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">{item.abstract}</p>
+                  <p className="text-xs text-slate-700 leading-relaxed line-clamp-3">{item.abstract}</p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
+                <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200">
                   <button
                     type="button"
                     onClick={async () => {
                       const newStatus = !item.published
-                      await supabase.from('publications').update({ published: newStatus }).eq('id', item.id)
+                      const { error } = await supabase
+                        .from('publications')
+                        .update({ published: newStatus })
+                        .eq('id', item.id)
+
+                      if (error) {
+                        setFeedback({ type: 'error', message: `Could not update publication status: ${error.message}` })
+                        return
+                      }
+
                       setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, published: newStatus } : i)))
+                      setFeedback({
+                        type: 'success',
+                        message: newStatus ? 'Publication published.' : 'Publication moved to draft.'
+                      })
                     }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border ${
                       item.published
-                        ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
-                        : 'bg-slate-950 text-slate-500 border-slate-800'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-slate-50 text-slate-600 border-slate-200'
                     }`}
                   >
                     {item.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -266,7 +271,7 @@ export default function AdminPublicationsPage() {
                       href={item.doi_or_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-colors"
+                      className="p-2 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors"
                       title="Open Paper / DOI"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -276,7 +281,7 @@ export default function AdminPublicationsPage() {
                   <button
                     type="button"
                     onClick={() => handleOpenEdit(item)}
-                    className="p-2 rounded-xl bg-slate-950 hover:bg-blue-950 text-blue-400 hover:text-blue-300 border border-slate-800 transition-colors"
+                    className="p-2 rounded-xl bg-white hover:bg-blue-50 text-blue-700 hover:text-blue-800 border border-slate-200 transition-colors"
                     title="Edit"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -285,7 +290,7 @@ export default function AdminPublicationsPage() {
                   <button
                     type="button"
                     onClick={() => setDeletingItem(item)}
-                    className="p-2 rounded-xl bg-slate-950 hover:bg-rose-950 text-rose-400 hover:text-rose-300 border border-slate-800 transition-colors"
+                    className="p-2 rounded-xl bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-700 border border-slate-200 transition-colors"
                     title="Delete"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -306,8 +311,8 @@ export default function AdminPublicationsPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Publication Title <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Publication Title <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
@@ -315,14 +320,14 @@ export default function AdminPublicationsPage() {
               value={formData.title || ''}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g. Optimizing Predictive Analytics in Technical Education"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Publisher / Journal <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Publisher / Journal <span className="text-rose-600">*</span>
               </label>
               <input
                 type="text"
@@ -330,18 +335,18 @@ export default function AdminPublicationsPage() {
                 value={formData.publisher_or_journal || ''}
                 onChange={(e) => setFormData({ ...formData, publisher_or_journal: e.target.value })}
                 placeholder="e.g. Journal of Applied Data Science"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Publication Type
               </label>
               <select
                 value={formData.publication_type || 'paper'}
                 onChange={(e) => setFormData({ ...formData, publication_type: e.target.value as Publication['publication_type'] })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               >
                 <option value="paper">Peer-Reviewed Paper</option>
                 <option value="article">Technical Article</option>
@@ -353,20 +358,20 @@ export default function AdminPublicationsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Publication Date <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Publication Date <span className="text-rose-600">*</span>
               </label>
               <input
                 type="date"
                 required
                 value={formData.publication_date || ''}
                 onChange={(e) => setFormData({ ...formData, publication_date: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 DOI or URL Link
               </label>
               <input
@@ -374,39 +379,39 @@ export default function AdminPublicationsPage() {
                 value={formData.doi_or_url || ''}
                 onChange={(e) => setFormData({ ...formData, doi_or_url: e.target.value })}
                 placeholder="https://doi.org/... or URL"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Display Order
               </label>
               <input
                 type="number"
                 value={formData.display_order ?? 0}
                 onChange={(e) => setFormData({ ...formData, display_order: Number(e.target.value) })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Authors (comma-separated)
             </label>
             <input
               type="text"
               value={authorsText}
               onChange={(e) => setAuthorsText(e.target.value)}
-              placeholder="Damilola Miracle Oluwagbamila, Co-author Name"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+              placeholder="Damilola Oluwagbamila, Co-author Name"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Abstract <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Abstract <span className="text-rose-600">*</span>
             </label>
             <textarea
               rows={4}
@@ -414,7 +419,7 @@ export default function AdminPublicationsPage() {
               value={formData.abstract || ''}
               onChange={(e) => setFormData({ ...formData, abstract: e.target.value })}
               placeholder="Detailed summary of problem, methodology, findings, and conclusions..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:border-blue-500 focus:outline-none"
             />
           </div>
 
@@ -424,25 +429,25 @@ export default function AdminPublicationsPage() {
                 type="checkbox"
                 checked={formData.published !== false}
                 onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-                className="w-4 h-4 rounded text-blue-600 bg-slate-950 border-slate-800 focus:ring-0"
+                className="w-4 h-4 rounded text-blue-600 bg-white border-slate-300 focus:ring-0"
               />
               <span className="text-xs font-semibold text-slate-300">Publish on public portfolio</span>
             </label>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               disabled={saving}
               onClick={() => setModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-600/20"
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-lg shadow-blue-600/20"
             >
               {saving ? 'Saving...' : formData.id ? 'Save Changes' : 'Create Publication'}
             </button>

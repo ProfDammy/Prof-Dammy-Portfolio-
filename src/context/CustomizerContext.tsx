@@ -1,9 +1,31 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback
+} from 'react'
+
 import { SiteSettings } from '@/types/database'
-import { mockSiteSettings } from '@/lib/mockData'
 import { supabase } from '@/lib/supabaseClient'
+
+const defaultSettings: SiteSettings = {
+  id: '',
+  theme_accent_color: '#2563eb',
+  custom_headline: '',
+  custom_subtitle: '',
+  primary_cta_text: 'Explore My Work',
+  primary_cta_link: '#projects',
+  secondary_cta_text: 'Contact Me',
+  secondary_cta_link: '#contact',
+  section_visibility: {},
+  section_order: [],
+  navigation_labels: {},
+  footer_content: '',
+  updated_at: new Date().toISOString()
+}
 
 interface CustomizerContextType {
   settings: SiteSettings
@@ -14,18 +36,24 @@ interface CustomizerContextType {
 }
 
 const CustomizerContext = createContext<CustomizerContextType>({
-  settings: mockSiteSettings,
+  settings: defaultSettings,
   updateSettings: async () => false,
   resetSettings: async () => {},
   refreshSettings: async () => {},
-  loading: false
+  loading: true
 })
 
-export function CustomizerProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<SiteSettings>(mockSiteSettings)
+export function CustomizerProvider({
+  children
+}: {
+  children: React.ReactNode
+}) {
+  const [settings, setSettings] = useState<SiteSettings>(defaultSettings)
   const [loading, setLoading] = useState(true)
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
+    setLoading(true)
+
     try {
       const { data, error } = await supabase
         .from('site_settings')
@@ -34,100 +62,114 @@ export function CustomizerProvider({ children }: { children: React.ReactNode }) 
         .limit(1)
         .maybeSingle()
 
-      if (data && !error) {
+      if (error) throw error
+
+      if (data) {
         setSettings({
-          ...mockSiteSettings,
-          ...data,
-          section_visibility: data.section_visibility || mockSiteSettings.section_visibility,
-          section_order: data.section_order || mockSiteSettings.section_order,
-          navigation_labels: data.navigation_labels || mockSiteSettings.navigation_labels
-        })
-        localStorage.setItem('profdammy_site_settings', JSON.stringify(data))
+          ...defaultSettings,
+          ...data
+        } as SiteSettings)
       } else {
-        const saved = localStorage.getItem('profdammy_site_settings')
-        if (saved) {
-          try {
-            setSettings(JSON.parse(saved))
-          } catch {
-            setSettings(mockSiteSettings)
-          }
-        }
+        setSettings(defaultSettings)
       }
-    } catch (e) {
-      console.error('Failed to load site settings from Supabase:', e)
+    } catch (error) {
+      console.error('Failed to load site settings:', error)
+      setSettings(defaultSettings)
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    fetchSettings()
   }, [])
 
   useEffect(() => {
-    if (settings.theme_accent_color) {
-      document.documentElement.style.setProperty('--dynamic-accent', settings.theme_accent_color)
-    }
+    fetchSettings()
+  }, [fetchSettings])
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--dynamic-accent',
+      settings.theme_accent_color || '#2563eb'
+    )
   }, [settings.theme_accent_color])
 
-  const updateSettings = async (newSettings: Partial<SiteSettings>): Promise<boolean> => {
+  const updateSettings = async (
+    newSettings: Partial<SiteSettings>
+  ): Promise<boolean> => {
     const updated = {
       ...settings,
       ...newSettings,
       updated_at: new Date().toISOString()
     }
-    setSettings(updated)
-    localStorage.setItem('profdammy_site_settings', JSON.stringify(updated))
+
+    const payload = {
+      theme_accent_color: updated.theme_accent_color,
+      custom_headline: updated.custom_headline,
+      custom_subtitle: updated.custom_subtitle,
+      primary_cta_text: updated.primary_cta_text,
+      primary_cta_link: updated.primary_cta_link,
+      secondary_cta_text: updated.secondary_cta_text,
+      secondary_cta_link: updated.secondary_cta_link,
+      section_visibility: updated.section_visibility,
+      section_order: updated.section_order,
+      navigation_labels: updated.navigation_labels,
+      footer_content: updated.footer_content,
+      updated_at: updated.updated_at
+    }
 
     try {
-      const payload = {
-        id: updated.id || 'b0000000-0000-0000-0000-000000000001',
-        theme_accent_color: updated.theme_accent_color,
-        custom_headline: updated.custom_headline,
-        custom_subtitle: updated.custom_subtitle,
-        primary_cta_text: updated.primary_cta_text,
-        primary_cta_link: updated.primary_cta_link,
-        secondary_cta_text: updated.secondary_cta_text,
-        secondary_cta_link: updated.secondary_cta_link,
-        section_visibility: updated.section_visibility,
-        section_order: updated.section_order,
-        navigation_labels: updated.navigation_labels,
-        footer_content: updated.footer_content,
-        updated_at: new Date().toISOString()
+      let error
+
+      if (settings.id) {
+        const result = await supabase
+          .from('site_settings')
+          .update(payload)
+          .eq('id', settings.id)
+
+        error = result.error
+      } else {
+        const result = await supabase
+          .from('site_settings')
+          .insert(payload)
+          .select('*')
+          .single()
+
+        error = result.error
+
+        if (result.data) {
+          setSettings(result.data as SiteSettings)
+          return true
+        }
       }
 
-      const { error } = await supabase
-        .from('site_settings')
-        .upsert(payload)
+      if (error) throw error
 
-      if (error) {
-        console.warn('Could not persist site_settings to Supabase:', error.message)
-        return false
-      }
+      setSettings(updated)
+      await fetchSettings()
+
       return true
-    } catch (err) {
-      console.error('Error updating site_settings:', err)
+    } catch (error) {
+      console.error('Error updating site settings:', error)
       return false
     }
   }
 
   const resetSettings = async () => {
-    setSettings(mockSiteSettings)
-    localStorage.removeItem('profdammy_site_settings')
-    try {
-      await supabase
-        .from('site_settings')
-        .upsert({
-          ...mockSiteSettings,
-          updated_at: new Date().toISOString()
-        })
-    } catch (err) {
-      console.warn('Failed to reset in database:', err)
+    const success = await updateSettings(defaultSettings)
+
+    if (!success) {
+      console.error('Could not reset site settings.')
     }
   }
 
-  return (
-    <CustomizerContext.Provider value={{ settings, updateSettings, resetSettings, refreshSettings: fetchSettings, loading }}>
+    return (
+    <CustomizerContext.Provider
+      value={{
+        settings,
+        updateSettings,
+        resetSettings,
+        refreshSettings: fetchSettings,
+        loading
+      }}
+    >
       {children}
     </CustomizerContext.Provider>
   )

@@ -1,128 +1,148 @@
+
 'use client'
 
-import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useSiteCustomizer } from '@/context/CustomizerContext'
-import { Menu, X, Shield, ChevronRight } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { useState } from 'react'
+import type { Profile } from '@/types/database'
 
 interface NavbarProps {
   navLabels?: Record<string, string>
   visibility?: Record<string, boolean>
+  profile?: Profile | null
 }
 
-export function Navbar({ navLabels, visibility }: NavbarProps) {
-  const { settings } = useSiteCustomizer()
-  const [scrolled, setScrolled] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+const navLinks = [
+  { key: 'home', label: 'Home', href: '/' },
+  { key: 'about', label: 'About', href: '/about' },
+  { key: 'skills', label: 'Expertise', href: '/skills' },
+  { key: 'experience', label: 'Experience', href: '/experience' },
+  { key: 'projects', label: 'Projects', href: '/projects' },
+  { key: 'teaching', label: 'Teaching', href: '/teaching' },
+  { key: 'leadership', label: 'Leadership', href: '/leadership' },
+  { key: 'education', label: 'Education', href: '/education' },
+  { key: 'publications', label: 'Research', href: '/research' },
+  { key: 'achievements', label: 'Achievements', href: '/achievements' },
+  { key: 'gallery', label: 'Gallery', href: '/gallery' },
+  { key: 'contact', label: 'Contact', href: '/contact' },
+]
 
-  const labels = navLabels || settings.navigation_labels || {}
-  const visibleSections = visibility || settings.section_visibility || {}
+export default function Navbar({
+  navLabels = {},
+  visibility = {},
+  profile,
+}: NavbarProps) {
+  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setScrolled(true)
-      } else {
-        setScrolled(false)
-      }
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  const visibleLinks = navLinks.filter(
+    (link) => link.key === 'home' || visibility[link.key] !== false
+  )
 
-  const navItems = [
-    { key: 'about', href: '#about', label: labels.about || 'About' },
-    { key: 'skills', href: '#skills', label: labels.skills || 'Skills' },
-    { key: 'experience', href: '#experience', label: labels.experience || 'Experience' },
-    { key: 'projects', href: '#projects', label: labels.projects || 'Projects' },
-    { key: 'teaching', href: '#teaching', label: labels.teaching || 'Teaching' },
-    { key: 'leadership', href: '#leadership', label: labels.leadership || 'Leadership' },
-    { key: 'education', href: '#education', label: labels.education || 'Education' },
-    { key: 'publications', href: '#publications', label: labels.publications || 'Research' },
-    { key: 'achievements', href: '#achievements', label: labels.achievements || 'Awards' },
-    { key: 'gallery', href: '#gallery', label: labels.gallery || 'Gallery' },
-    { key: 'contact', href: '#contact', label: labels.contact || 'Contact' },
-  ].filter((item) => visibleSections[item.key] !== false)
+  const displayName =
+    profile?.show_nickname && profile?.nickname
+      ? profile.nickname
+      : profile?.full_name || 'Damilola Oluwagbamila'
+
+  const isActive = (href: string) =>
+    href === '/'
+      ? pathname === '/'
+      : pathname === href || pathname.startsWith(`${href}/`)
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-lg py-3'
-          : 'bg-transparent py-5'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
-            PD
-          </div>
-          <div>
-            <span className="text-lg font-bold text-white tracking-tight block">Prof Dammy</span>
-            <span className="text-xs text-slate-400 block font-medium">Data & AI Specialist</span>
-          </div>
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
+      <div className="mx-auto flex min-h-[70px] max-w-[1600px] items-center justify-between gap-5 px-5 lg:px-8 xl:px-10">
+
+        {/* Brand */}
+        <Link
+          href="/"
+          className="shrink-0 text-lg font-bold tracking-tight text-slate-900 transition-colors hover:text-blue-700"
+          onClick={() => setMobileOpen(false)}
+        >
+          {displayName}
         </Link>
 
-        <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2">
-          {navItems.map((item) => (
-            <a
-              key={item.key}
-              href={item.href}
-              className="px-3 py-1.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-lg transition-colors"
-            >
-              {item.label}
-            </a>
-          ))}
+        {/* Desktop navigation */}
+        <nav
+          aria-label="Main navigation"
+          className="hidden flex-1 items-center justify-end gap-x-4 xl:gap-x-5 2xl:flex 2xl:gap-x-6"
+        >
+          {visibleLinks.map((link) => {
+            const active = isActive(link.href)
+            const isContact = link.key === 'contact'
+
+            return (
+              <Link
+                key={link.key}
+                href={link.href}
+                aria-current={active ? 'page' : undefined}
+                className={
+                  isContact
+                    ? `whitespace-nowrap rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition-colors hover:bg-blue-800 hover:!text-white ${
+                        active ? 'bg-blue-900' : ''
+                      }`
+                    : `whitespace-nowrap text-sm font-medium transition-colors ${
+                        active
+                          ? 'text-blue-700'
+                          : 'text-slate-600 hover:text-blue-700'
+                      }`
+                }
+              >
+                {navLabels[link.key] || link.label}
+              </Link>
+            )
+          })}
         </nav>
 
-        <div className="hidden lg:flex items-center space-x-3">
-          <a
-            href="#contact"
-            className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md transition-all flex items-center gap-1"
-          >
-            Get in Touch
-            <ChevronRight className="w-4 h-4" />
-          </a>
-          <Link
-            href="/admin/login"
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-lg transition-colors"
-            title="Admin Portal"
-          >
-            <Shield className="w-4 h-4" />
-          </Link>
-        </div>
-
-        <div className="lg:hidden flex items-center gap-2">
-          <Link
-            href="/admin/login"
-            className="p-2 text-slate-400 hover:text-white rounded-lg"
-            title="Admin Portal"
-          >
-            <Shield className="w-5 h-5" />
-          </Link>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 focus:outline-none"
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
+        {/* Tablet and mobile menu toggle */}
+        <button
+          type="button"
+          onClick={() => setMobileOpen((open) => !open)}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-navigation"
+          aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
+          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 2xl:hidden"
+        >
+          {mobileOpen ? 'Close' : 'Menu'}
+        </button>
       </div>
 
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 px-4 pt-2 pb-6 space-y-2">
-          {navItems.map((item) => (
-            <a
-              key={item.key}
-              href={item.href}
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
-            >
-              {item.label}
-            </a>
-          ))}
-        </div>
+      {/* Tablet and mobile navigation */}
+      {mobileOpen && (
+        <nav
+          id="mobile-navigation"
+          aria-label="Mobile navigation"
+          className="border-t border-slate-200 bg-white px-5 py-4 2xl:hidden"
+        >
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-2 sm:grid-cols-3">
+            {visibleLinks.map((link) => {
+              const active = isActive(link.href)
+              const isContact = link.key === 'contact'
+
+              return (
+                <Link
+                  key={link.key}
+                  href={link.href}
+                  aria-current={active ? 'page' : undefined}
+                  onClick={() => setMobileOpen(false)}
+                  className={
+                    isContact
+                      ? `rounded-lg bg-blue-700 px-3 py-3 text-center text-sm font-semibold !text-white transition-colors hover:bg-blue-800 hover:!text-white ${
+                          active ? 'bg-blue-900' : ''
+                        }`
+                      : `rounded-lg px-3 py-3 text-sm font-medium transition-colors ${
+                          active
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-slate-700 hover:bg-slate-50 hover:text-blue-700'
+                        }`
+                  }
+                >
+                  {navLabels[link.key] || link.label}
+                </Link>
+              )
+            })}
+          </div>
+        </nav>
       )}
     </header>
   )

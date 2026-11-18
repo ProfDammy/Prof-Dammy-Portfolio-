@@ -1,21 +1,11 @@
+
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { CustomizerProvider } from '@/context/CustomizerContext'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
-
 export const metadata: Metadata = {
-  title: "Prof Dammy | Damilola Miracle Oluwagbamila - Portfolio",
-  description: "Official portfolio of Damilola Miracle Oluwagbamila (Prof Dammy)",
+  title: 'Damilola Oluwagbamila | Portfolio',
+  description: 'Official portfolio of Damilola Oluwagbamila.',
 }
 
 export default function RootLayout({
@@ -25,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className="font-sans antialiased">
         <CustomizerProvider>
           {children}
         </CustomizerProvider>

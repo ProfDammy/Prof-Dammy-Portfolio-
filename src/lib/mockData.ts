@@ -1,4 +1,4 @@
-import {
+﻿import {
   Profile,
   SiteSettings,
   Experience,
@@ -16,18 +16,20 @@ import {
 export const mockProfile: Profile = {
   id: 'a0000000-0000-0000-0000-000000000001',
   full_name: 'Damilola Miracle Oluwagbamila',
+  nickname: null,
+show_nickname: false,
   professional_title: 'Data Analysis Instructor | AI & Software Solutions Developer | Academic Researcher',
   bio: 'Data Analytics Specialist, Educator, and Tech Leader dedicated to transforming complex data into actionable intelligence and mentoring next-generation tech talent.',
   detailed_about: `Damilola Miracle Oluwagbamila, known professionally as Prof Dammy, is a Data Analysis Instructor at SQI College of ICT, AI & Software Solutions Developer, and Community Leader.
 
 His professional focus encompasses:
-• Data Analytics & Business Intelligence (Power BI, SQL, Python, Excel)
-• AI-Assisted Solution Development & Machine Learning Systems
-• Technical Mentorship & Pedagogy
-• Academic Research & Data-Driven Publications
-• Youth Empowerment & Digital Literacy through Creative Thinkers Forum`,
+â€¢ Data Analytics & Business Intelligence (Power BI, SQL, Python, Excel)
+â€¢ AI-Assisted Solution Development & Machine Learning Systems
+â€¢ Technical Mentorship & Pedagogy
+â€¢ Academic Research & Data-Driven Publications
+â€¢ Youth Empowerment & Digital Literacy through Creative Thinkers Forum`,
   avatar_url: null,
-  hero_media_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
+  hero_media_url: null,
   contact_email: 'contact@profdammy.com',
   contact_phone: null,
   location: 'Oyo State, Nigeria',
@@ -80,7 +82,7 @@ export const mockSiteSettings: SiteSettings = {
     gallery: 'Gallery',
     contact: 'Contact'
   },
-  footer_content: '© Damilola Miracle Oluwagbamila (Prof Dammy). All rights reserved.',
+  footer_content: 'Â© Damilola Miracle Oluwagbamila (Prof Dammy). All rights reserved.',
   updated_at: new Date().toISOString()
 }
 
@@ -304,3 +306,4 @@ export const mockMediaAssets: MediaAsset[] = [
     created_at: new Date().toISOString()
   }
 ]
+

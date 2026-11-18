@@ -9,6 +9,8 @@ export type Json =
 export interface Profile {
   id: string
   full_name: string
+  nickname: string | null
+  show_nickname: boolean
   professional_title: string
   bio: string
   detailed_about: string | null

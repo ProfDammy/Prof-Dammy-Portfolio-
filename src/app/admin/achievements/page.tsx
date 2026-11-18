@@ -144,30 +144,20 @@ export default function AdminAchievementsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-amber-400" />
-            Achievements Manager
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage honors, excellence awards, hackathon recognitions, and community commendations.
-          </p>
-        </div>
-
+    <div className="space-y-6 max-w-6xl pb-10">
+      <div className="flex justify-end items-center gap-3 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={fetchData}
-            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Reload
           </button>
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/20 transition-all"
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-slate-900 text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/10 transition-all"
           >
             <Plus className="w-4 h-4" /> Add Achievement
           </button>
@@ -175,66 +165,78 @@ export default function AdminAchievementsPage() {
       </div>
 
       {feedback && (
-        <FeedbackAlert
-          type={feedback.type}
-          message={feedback.message}
-          onClose={() => setFeedback(null)}
-        />
+        <div className="fixed right-4 top-4 z-[100] w-[min(24rem,calc(100vw-2rem))]">
+          <FeedbackAlert
+            type={feedback.type}
+            message={feedback.message}
+            onClose={() => setFeedback(null)}
+          />
+        </div>
       )}
 
       <div className="space-y-4">
         {loading ? (
           <FeedbackAlert type="loading" message="Loading achievements..." />
         ) : items.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-3">
-            <Trophy className="w-10 h-10 text-slate-600 mx-auto" />
-            <p className="text-sm font-semibold text-white">No achievements recorded</p>
-            <p className="text-xs text-slate-400">Click &ldquo;Add Achievement&rdquo; to insert awards and honors.</p>
+          <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center space-y-3">
+            <Trophy className="w-10 h-10 text-slate-500 mx-auto" />
+            <p className="text-sm font-semibold text-slate-900">No achievements recorded</p>
+            <p className="text-xs text-slate-500">Click &ldquo;Add Achievement&rdquo; to insert awards and honors.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {items.map((item) => (
               <div
                 key={item.id}
-                className={`p-5 rounded-2xl bg-slate-900 border transition-all ${
+                className={`p-5 rounded-2xl bg-white border transition-all ${
                   item.published
-                    ? 'border-slate-800 hover:border-slate-700'
-                    : 'border-slate-800/50 opacity-70 bg-slate-950/40'
+                    ? 'border-slate-200 hover:border-slate-300'
+                    : 'border-slate-200 opacity-70 bg-slate-50'
                 } flex flex-col md:flex-row md:items-start justify-between gap-4`}
               >
                 <div className="space-y-2 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-200">
                       Order: {item.display_order}
                     </span>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                       {item.category}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="text-base font-bold text-white">{item.title}</h3>
-                    <p className="text-xs font-semibold text-blue-400">{item.issuer}</p>
-                    <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                    <h3 className="text-base font-bold text-slate-900">{item.title}</h3>
+                    <p className="text-xs font-semibold text-blue-700">{item.issuer}</p>
+                    <p className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
                       <Calendar className="w-3.5 h-3.5 text-slate-500" /> Date: {item.award_date}
                     </p>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed">{item.description}</p>
+                  <p className="text-xs text-slate-700 leading-relaxed">{item.description}</p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
+                <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200">
                   <button
                     type="button"
                     onClick={async () => {
                       const newStatus = !item.published
-                      await supabase.from('achievements').update({ published: newStatus }).eq('id', item.id)
+                      const { error } = await supabase
+                        .from('achievements')
+                        .update({ published: newStatus })
+                        .eq('id', item.id)
+
+                      if (error) {
+                        setFeedback({ type: 'error', message: `Could not update publication status: ${error.message}` })
+                        return
+                      }
+
                       setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, published: newStatus } : i)))
+                      setFeedback({ type: 'success', message: newStatus ? 'Achievement published.' : 'Achievement moved to draft.' })
                     }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border ${
                       item.published
-                        ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
-                        : 'bg-slate-950 text-slate-500 border-slate-800'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-slate-50 text-slate-500 border-slate-200'
                     }`}
                   >
                     {item.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -244,7 +246,7 @@ export default function AdminAchievementsPage() {
                   <button
                     type="button"
                     onClick={() => handleOpenEdit(item)}
-                    className="p-2 rounded-xl bg-slate-950 hover:bg-blue-950 text-blue-400 hover:text-blue-300 border border-slate-800 transition-colors"
+                    className="p-2 rounded-xl bg-slate-50 hover:bg-blue-50 text-blue-700 hover:text-blue-700 border border-slate-200 transition-colors"
                     title="Edit"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -253,7 +255,7 @@ export default function AdminAchievementsPage() {
                   <button
                     type="button"
                     onClick={() => setDeletingItem(item)}
-                    className="p-2 rounded-xl bg-slate-950 hover:bg-rose-950 text-rose-400 hover:text-rose-300 border border-slate-800 transition-colors"
+                    className="p-2 rounded-xl bg-slate-50 hover:bg-rose-50 text-rose-600 hover:text-rose-700 border border-slate-200 transition-colors"
                     title="Delete"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -274,8 +276,8 @@ export default function AdminAchievementsPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Award / Recognition Title <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Award / Recognition Title <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
@@ -283,14 +285,14 @@ export default function AdminAchievementsPage() {
               value={formData.title || ''}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g. Outstanding Data Analysis Instructor of the Year"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Category <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Category <span className="text-rose-600">*</span>
               </label>
               <input
                 type="text"
@@ -298,13 +300,13 @@ export default function AdminAchievementsPage() {
                 value={formData.category || ''}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 placeholder="Teaching Excellence, Hackathon Winner..."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Issuing Organization / Body <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Issuing Organization / Body <span className="text-rose-600">*</span>
               </label>
               <input
                 type="text"
@@ -312,41 +314,41 @@ export default function AdminAchievementsPage() {
                 value={formData.issuer || ''}
                 onChange={(e) => setFormData({ ...formData, issuer: e.target.value })}
                 placeholder="SQI College of ICT Academic Board"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Award Date <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Award Date <span className="text-rose-600">*</span>
               </label>
               <input
                 type="date"
                 required
                 value={formData.award_date || ''}
                 onChange={(e) => setFormData({ ...formData, award_date: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Display Order
               </label>
               <input
                 type="number"
                 value={formData.display_order ?? 0}
                 onChange={(e) => setFormData({ ...formData, display_order: Number(e.target.value) })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Description <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Description <span className="text-rose-600">*</span>
             </label>
             <textarea
               rows={3}
@@ -354,7 +356,7 @@ export default function AdminAchievementsPage() {
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Recognition context, notable student outcomes, or award significance..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
             />
           </div>
 
@@ -364,25 +366,25 @@ export default function AdminAchievementsPage() {
                 type="checkbox"
                 checked={formData.published !== false}
                 onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-                className="w-4 h-4 rounded text-blue-600 bg-slate-950 border-slate-800 focus:ring-0"
+                className="w-4 h-4 rounded text-blue-600 bg-white border-slate-300 focus:ring-0"
               />
-              <span className="text-xs font-semibold text-slate-300">Publish on public portfolio</span>
+              <span className="text-xs font-semibold text-slate-700">Publish on public portfolio</span>
             </label>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               disabled={saving}
               onClick={() => setModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-900"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-600/20"
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-slate-900 text-xs font-semibold shadow-lg shadow-blue-600/10"
             >
               {saving ? 'Saving...' : formData.id ? 'Save Changes' : 'Create Achievement'}
             </button>
