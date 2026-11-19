@@ -4,7 +4,15 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, AlertCircle, CheckCircle } from 'lucide-react'
+import {
+  ShieldCheck,
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  LockKeyhole,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function AdminLoginPage() {
@@ -12,6 +20,7 @@ export default function AdminLoginPage() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -25,12 +34,18 @@ export default function AdminLoginPage() {
     setError(null)
 
     if (!adminEmail) {
-      setError('Administrator configuration is missing. Please contact the site administrator.')
+      setError(
+        'Administrator configuration is missing. Please contact the site administrator.'
+      )
       return
     }
 
-    if (email.trim().toLowerCase() !== adminEmail) {
-      setError('This account is not authorized to access the Admin Workspace.')
+    const normalizedEmail = email.trim().toLowerCase()
+
+    if (normalizedEmail !== adminEmail) {
+      setError(
+        'This account is not authorized to access the Admin Workspace.'
+      )
       return
     }
 
@@ -39,13 +54,11 @@ export default function AdminLoginPage() {
     try {
       const { data, error: authError } =
         await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: normalizedEmail,
           password,
         })
 
-      if (authError) {
-        throw authError
-      }
+      if (authError) throw authError
 
       if (!data.user || !data.session) {
         throw new Error('Authentication could not be completed.')
@@ -58,7 +71,9 @@ export default function AdminLoginPage() {
         !data.user.email_confirmed_at
       ) {
         await supabase.auth.signOut()
-        throw new Error('This account is not authorized to access the Admin Workspace.')
+        throw new Error(
+          'This account is not authorized to access the Admin Workspace.'
+        )
       }
 
       setSuccess(true)
@@ -77,110 +92,165 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-4 text-slate-100">
-      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue-600/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-indigo-600/10 blur-3xl" />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#070D1B] px-4 py-12 text-slate-100">
 
-      <div className="relative w-full max-w-md space-y-6 rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-2xl">
-        <div className="space-y-2 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white">
-            <Shield className="h-6 w-6" />
+      {/* Background accents */}
+      <div className="pointer-events-none absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-blue-600/10 blur-[110px]" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 h-[420px] w-[420px] rounded-full bg-indigo-500/10 blur-[110px]" />
+
+      <div className="relative w-full max-w-[440px]">
+
+        {/* Brand */}
+        <div className="mb-7 text-center">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-600/15 text-blue-400 shadow-lg shadow-blue-950/30">
+            <ShieldCheck className="h-7 w-7" strokeWidth={1.8} />
           </div>
 
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            Admin CMS Portal
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.28em] text-blue-400">
+            Private Administration
+          </p>
+
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-[34px]">
+            Admin Workspace
           </h1>
 
-          <p className="text-xs text-slate-400">
-            Private Content Management System for Prof Dammy Portfolio
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Damilola Oluwagbamila
+            <span className="mx-2 text-slate-600">·</span>
+            Portfolio Management
           </p>
         </div>
 
-        {error && (
-          <div
-            role="alert"
-            className="flex items-center gap-2 rounded-xl border border-rose-800 bg-rose-950 p-3.5 text-xs text-rose-300"
-          >
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
-            <span>{error}</span>
-          </div>
-        )}
+        {/* Login card */}
+        <div className="rounded-2xl border border-white/[0.09] bg-[#111B2E] p-6 shadow-2xl shadow-black/30 sm:p-9">
 
-        {success && (
-          <div
-            role="status"
-            className="flex items-center gap-2 rounded-xl border border-emerald-800 bg-emerald-950 p-3.5 text-xs text-emerald-300"
-          >
-            <CheckCircle className="h-4 w-4 shrink-0 text-emerald-400" />
-            <span>Authorization granted. Opening your workspace...</span>
+          <div className="mb-7">
+            <h2 className="text-xl font-semibold text-white">
+              Welcome back
+            </h2>
+            <p className="mt-1.5 text-sm text-slate-400">
+              Sign in to manage your portfolio content.
+            </p>
           </div>
-        )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label
-              htmlFor="admin-email"
-              className="mb-1 block text-xs font-semibold text-slate-300"
+          {/* Error */}
+          {error && (
+            <div
+              role="alert"
+              className="mb-5 flex items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300"
             >
-              Admin Email
-            </label>
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
-            <input
-              id="admin-email"
-              type="email"
-              required
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter administrator email"
-              disabled={loading || success}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="admin-password"
-              className="mb-1 block text-xs font-semibold text-slate-300"
+          {/* Success */}
+          {success && (
+            <div
+              role="status"
+              className="mb-5 flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300"
             >
-              Password
-            </label>
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>Access granted. Opening your workspace...</span>
+            </div>
+          )}
 
-            <input
-              id="admin-password"
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+          <form onSubmit={handleLogin} className="space-y-5">
+
+            {/* Email */}
+            <div>
+              <label
+                htmlFor="admin-email"
+                className="mb-2 block text-sm font-medium text-slate-200"
+              >
+                Administrator email
+              </label>
+
+              <input
+                id="admin-email"
+                type="email"
+                required
+                autoComplete="username"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                disabled={loading || success}
+                className="h-12 w-full rounded-xl border border-slate-700/80 bg-[#0A1221] px-4 text-sm text-white outline-none transition placeholder:text-slate-500 hover:border-slate-600 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 disabled:opacity-60"
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label
+                  htmlFor="admin-password"
+                  className="text-sm font-medium text-slate-200"
+                >
+                  Password
+                </label>
+                <LockKeyhole className="h-4 w-4 text-slate-500" />
+              </div>
+
+              <div className="relative">
+                <input
+                  id="admin-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  disabled={loading || success}
+                  className="h-12 w-full rounded-xl border border-slate-700/80 bg-[#0A1221] px-4 pr-12 text-sm text-white outline-none transition placeholder:text-slate-500 hover:border-slate-600 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 disabled:opacity-60"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading || success}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition hover:text-white disabled:opacity-50"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
               disabled={loading || success}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60"
-            />
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition duration-200 hover:bg-blue-500 hover:shadow-blue-500/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading
+                ? 'Authenticating...'
+                : success
+                  ? 'Opening workspace...'
+                  : 'Sign in to workspace'}
+            </button>
+          </form>
+
+          <div className="mt-7 border-t border-white/[0.08] pt-5">
+            <Link
+              href="/"
+              className="group flex items-center justify-center gap-2 text-sm text-slate-400 transition hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" />
+              Back to portfolio
+            </Link>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading || success}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading
-              ? 'Authenticating...'
-              : success
-                ? 'Opening workspace...'
-                : 'Sign In to Dashboard'}
-          </button>
-        </form>
-
-        <div className="border-t border-slate-800 pt-5 text-center">
-          <Link
-            href="/"
-            className="text-xs text-blue-400 transition hover:text-blue-300 hover:underline"
-          >
-            ← Back to Portfolio
-          </Link>
         </div>
+
+        {/* Footer */}
+        <p className="mt-7 text-center text-[11px] tracking-wide text-slate-600">
+          SECURE ADMINISTRATION · AUTHORISED ACCESS ONLY
+        </p>
       </div>
-    </div>
+    </main>
   )
 }
