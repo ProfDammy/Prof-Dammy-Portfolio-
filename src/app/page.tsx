@@ -14,7 +14,6 @@ import {
   GraduationCap,
   FlaskConical,
   Code2,
-  BriefcaseBusiness,
   FolderGit2,
   Sparkles
 } from 'lucide-react'
@@ -62,7 +61,7 @@ export default function PortfolioHomePage() {
     )
   }
 
-  const { profile, projects, skills, experiences } = portfolio
+  const { profile, projects} = portfolio
 
   // Featured projects
   const featuredProjects = projects
@@ -368,70 +367,7 @@ export default function PortfolioHomePage() {
         </section>
       )}
 
-      {/* PROFESSIONAL SNAPSHOT */}
-      <section className="border-y border-slate-100 bg-slate-50 py-16 md:py-20">
-
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-
-          <div className="mb-10 max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">
-              At a glance
-            </p>
-
-            <h2 className="mt-3 text-3xl font-bold text-slate-950">
-              Professional snapshot
-            </h2>
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-3">
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-7">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                <Sparkles className="h-5 w-5" />
-              </div>
-
-              <p className="mt-5 text-4xl font-bold text-slate-950">
-                {skills.length}
-              </p>
-
-              <p className="mt-2 text-sm text-slate-600">
-                Published skills
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-7">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                <FolderGit2 className="h-5 w-5" />
-              </div>
-
-              <p className="mt-5 text-4xl font-bold text-slate-950">
-                {projects.length}
-              </p>
-
-              <p className="mt-2 text-sm text-slate-600">
-                Published projects
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-7">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                <BriefcaseBusiness className="h-5 w-5" />
-              </div>
-
-              <p className="mt-5 text-4xl font-bold text-slate-950">
-                {experiences.length}
-              </p>
-
-              <p className="mt-2 text-sm text-slate-600">
-                Professional experiences
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
+      
       {/* TESTIMONIALS */}
       <TestimonialsSection />
 
