@@ -23,26 +23,31 @@ type Testimonial = {
   professional_title: string | null
   organization: string | null
   relationship: string | null
+  location: string | null
   message: string
   photo_url: string | null
 }
 
 function TestimonialCard({ item }: { item: Testimonial }) {
   const details = [
-    item.professional_title,
     item.organization,
     item.relationship,
-  ].filter(Boolean)
+    item.location,
+  ].filter((value): value is string => Boolean(value?.trim()))
+
+  const displayName = [item.professional_title, item.client_name]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join(' ')
 
   return (
-    <article className="flex h-[220px] w-[min(82vw,320px)] shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:w-[320px] sm:p-6">
+    <article className="flex min-h-[240px] w-[min(88vw,380px)] shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:w-[380px] sm:p-6">
       <Quote aria-hidden="true" className="h-6 w-6 shrink-0 text-blue-200" />
 
-      <p className="testimonial-body mt-3 line-clamp-4 min-h-[5.5rem] text-[15px] leading-7 text-slate-700 sm:text-base">
+      <p className="testimonial-body mt-3 whitespace-normal break-words text-[15px] leading-7 text-slate-700 sm:text-base">
         “{item.message}”
       </p>
 
-      <div className="mt-auto flex items-center gap-3 border-t border-slate-100 pt-4">
+      <div className="mt-5 flex items-start gap-3 border-t border-slate-100 pt-4">
         {item.photo_url ? (
           <img
             src={item.photo_url}
@@ -59,14 +64,19 @@ function TestimonialCard({ item }: { item: Testimonial }) {
           </div>
         )}
 
-        <div className="min-w-0">
-          <p className="testimonial-heading truncate text-sm font-bold text-slate-900">
-            {item.client_name}
+        <div className="min-w-0 flex-1">
+          <p className="testimonial-heading whitespace-normal break-words text-sm font-bold leading-5 text-slate-900">
+            {displayName}
           </p>
+
           {details.length > 0 && (
-            <p className="testimonial-body mt-1 line-clamp-1 text-xs text-slate-500">
-              {details.join(' · ')}
-            </p>
+            <div className="testimonial-body mt-1 space-y-0.5 text-xs leading-5 text-slate-500">
+              {details.map((detail, index) => (
+                <p key={`${item.id}-detail-${index}`} className="whitespace-normal break-words">
+                  {detail}
+                </p>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -88,18 +98,18 @@ function MarqueeRow({
   return (
     <div className="testimonial-marquee relative overflow-hidden">
       <div
-        className={`testimonial-marquee-track flex w-max gap-4 py-2 ${
+        className={`testimonial-marquee-track flex w-max items-stretch gap-4 py-2 ${
           reverse ? 'testimonial-marquee-reverse' : ''
         }`}
         style={{ ['--marquee-duration' as string]: `${duration}s` }}
       >
-        <div className="flex shrink-0 gap-4 pr-4">
+        <div className="flex shrink-0 items-stretch gap-4 pr-4">
           {items.map((item) => (
             <TestimonialCard key={item.id} item={item} />
           ))}
         </div>
 
-        <div aria-hidden="true" className="flex shrink-0 gap-4 pr-4">
+        <div aria-hidden="true" className="flex shrink-0 items-stretch gap-4 pr-4">
           {items.map((item, index) => (
             <TestimonialCard key={`${item.id}-loop-${index}`} item={item} />
           ))}
@@ -119,7 +129,7 @@ export default function TestimonialsSection() {
     const load = async () => {
       const { data, error } = await supabase
         .from('testimonials')
-        .select('id, client_name, professional_title, organization, relationship, message, photo_url')
+        .select('id, client_name, professional_title, organization, relationship, location, message, photo_url')
         .eq('status', 'approved')
         .order('featured', { ascending: false })
         .order('display_order', { ascending: true })

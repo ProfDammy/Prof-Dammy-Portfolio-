@@ -31,6 +31,10 @@ export default function AdminProfilePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState<UploadKind | null>(null)
+  const [cropImage, setCropImage] = useState<{ file: File; url: string } | null>(null)
+  const [cropZoom, setCropZoom] = useState(1)
+  const [cropX, setCropX] = useState(50)
+  const [cropY, setCropY] = useState(50)
 
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error' | 'loading'
@@ -93,15 +97,7 @@ export default function AdminProfilePage() {
     }))
   }
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    kind: UploadKind,
-  ) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const input = event.target
-
+  const uploadSelectedFile = async (file: File, kind: UploadKind) => {
     try {
       if (kind === 'avatar' || kind === 'hero') {
         if (!file.type.startsWith('image/')) {
@@ -203,8 +199,103 @@ export default function AdminProfilePage() {
       })
     } finally {
       setUploading(null)
-      input.value = ''
     }
+  }
+
+  const handleFileUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    kind: UploadKind,
+  ) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const input = event.target
+
+    if (kind === 'avatar') {
+      if (!file.type.startsWith('image/')) {
+        setFeedback({ type: 'error', message: 'Please select a valid image file.' })
+        input.value = ''
+        return
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setFeedback({ type: 'error', message: 'Images must not exceed 5 MB.' })
+        input.value = ''
+        return
+      }
+
+      const url = URL.createObjectURL(file)
+      setCropImage({ file, url })
+      setCropZoom(1)
+      setCropX(50)
+      setCropY(50)
+      input.value = ''
+      return
+    }
+
+    void uploadSelectedFile(file, kind)
+    input.value = ''
+  }
+
+  const applyAvatarCrop = async () => {
+    if (!cropImage) return
+
+    try {
+      const image = new Image()
+      image.src = cropImage.url
+      await image.decode()
+
+      const sourceSize = Math.min(image.naturalWidth, image.naturalHeight) / cropZoom
+      const sourceX = (image.naturalWidth - sourceSize) * (cropX / 100)
+      const sourceY = (image.naturalHeight - sourceSize) * (cropY / 100)
+
+      const canvas = document.createElement('canvas')
+      canvas.width = 1200
+      canvas.height = 1200
+
+      const context = canvas.getContext('2d')
+      if (!context) throw new Error('Could not prepare the cropped image.')
+
+      context.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceSize,
+        sourceSize,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      )
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (result) => result ? resolve(result) : reject(new Error('Could not create the cropped image.')),
+          'image/jpeg',
+          0.92,
+        )
+      })
+
+      const croppedFile = new File(
+        [blob],
+        `profile-${Date.now()}.jpg`,
+        { type: 'image/jpeg' },
+      )
+
+      URL.revokeObjectURL(cropImage.url)
+      setCropImage(null)
+      await uploadSelectedFile(croppedFile, 'avatar')
+    } catch (err: unknown) {
+      setFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Could not crop the selected image.',
+      })
+    }
+  }
+
+  const cancelAvatarCrop = () => {
+    if (cropImage) URL.revokeObjectURL(cropImage.url)
+    setCropImage(null)
   }
 
   const handleSave = async (event: React.FormEvent) => {
@@ -446,7 +537,7 @@ export default function AdminProfilePage() {
                 <div className="flex flex-wrap justify-center gap-2">
                   <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-500">
                     <Upload className="h-4 w-4" />
-                    {uploading === 'avatar' ? 'Uploading...' : 'Upload Photograph'}
+                    {uploading === 'avatar' ? 'Uploading...' : 'Upload & Crop Photograph'}
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
@@ -761,6 +852,116 @@ export default function AdminProfilePage() {
           </button>
         </div>
       </form>
+
+      {cropImage && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="avatar-crop-title"
+        >
+          <div className="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="avatar-crop-title" className="text-lg font-bold text-slate-900">
+                  Crop profile photograph
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Adjust the zoom and position, then preview your square profile image.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={cancelAvatarCrop}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="mx-auto aspect-square w-full max-w-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+              <img
+                src={cropImage.url}
+                alt="Crop preview"
+                className="h-full w-full object-cover"
+                style={{
+                  objectPosition: `${cropX}% ${cropY}%`,
+                  transform: `scale(${cropZoom})`,
+                }}
+              />
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <div>
+                <div className="mb-2 flex justify-between text-sm">
+                  <label htmlFor="crop-zoom" className="font-medium text-slate-700">Zoom</label>
+                  <span className="text-slate-500">{cropZoom.toFixed(1)}×</span>
+                </div>
+                <input
+                  id="crop-zoom"
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.05"
+                  value={cropZoom}
+                  onChange={(event) => setCropZoom(Number(event.target.value))}
+                  className="w-full accent-blue-600"
+                />
+              </div>
+
+              <div>
+                <div className="mb-2 flex justify-between text-sm">
+                  <label htmlFor="crop-horizontal" className="font-medium text-slate-700">Horizontal position</label>
+                  <span className="text-slate-500">{cropX}%</span>
+                </div>
+                <input
+                  id="crop-horizontal"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={cropX}
+                  onChange={(event) => setCropX(Number(event.target.value))}
+                  className="w-full accent-blue-600"
+                />
+              </div>
+
+              <div>
+                <div className="mb-2 flex justify-between text-sm">
+                  <label htmlFor="crop-vertical" className="font-medium text-slate-700">Vertical position</label>
+                  <span className="text-slate-500">{cropY}%</span>
+                </div>
+                <input
+                  id="crop-vertical"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={cropY}
+                  onChange={(event) => setCropY(Number(event.target.value))}
+                  className="w-full accent-blue-600"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={cancelAvatarCrop}
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={applyAvatarCrop}
+                disabled={uploading !== null}
+                className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {uploading === 'avatar' ? 'Uploading...' : 'Apply crop & upload'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
