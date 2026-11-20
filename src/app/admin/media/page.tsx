@@ -248,6 +248,11 @@ export default function AdminMediaPage() {
   const [assets, setAssets] = useState<ManagedMediaAsset[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadBytesSent, setUploadBytesSent] = useState(0)
+  const [uploadTotalBytes, setUploadTotalBytes] = useState(0)
+  const [uploadFileName, setUploadFileName] = useState('')
+  const [uploadStage, setUploadStage] = useState<'uploading' | 'processing' | null>(null)
   const [savingEdit, setSavingEdit] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [feedback, setFeedback] = useState<Feedback>(null)
@@ -323,6 +328,13 @@ export default function AdminMediaPage() {
     let uploadedPath: string | null = null
 
     try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase configuration is missing. Check your public environment variables.')
+      }
+
       const ext = getExtension(file.name)
       const isDocument =
         ['pdf', 'doc', 'docx', 'txt'].includes(ext) ||
@@ -343,16 +355,58 @@ export default function AdminMediaPage() {
       const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
       const filePath = `${folder}/${Date.now()}_${cleanFileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('portfolio-media')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type || undefined,
-        })
+      setUploadFileName(file.name)
+      setUploadProgress(0)
+      setUploadBytesSent(0)
+      setUploadTotalBytes(file.size)
+      setUploadStage('uploading')
 
-      if (uploadError) throw new Error(uploadError.message)
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData.session?.access_token || supabaseAnonKey
+      const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
+      const uploadUrl = `${supabaseUrl}/storage/v1/object/portfolio-media/${encodedPath}`
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', uploadUrl)
+        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
+        xhr.setRequestHeader('apikey', supabaseAnonKey)
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
+        xhr.setRequestHeader('cache-control', '3600')
+        xhr.setRequestHeader('x-upsert', 'false')
+
+        xhr.upload.onprogress = (event) => {
+          if (!event.lengthComputable) return
+          setUploadBytesSent(event.loaded)
+          setUploadTotalBytes(event.total)
+          setUploadProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)))
+        }
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            setUploadProgress(100)
+            resolve()
+            return
+          }
+
+          let message = xhr.statusText || 'Storage upload failed.'
+          try {
+            const response = JSON.parse(xhr.responseText)
+            message = response.message || response.error || message
+          } catch {
+            if (xhr.responseText) message = xhr.responseText
+          }
+          reject(new Error(message))
+        }
+
+        xhr.onerror = () => reject(new Error('Network error while uploading. Please check your connection and try again.'))
+        xhr.onabort = () => reject(new Error('Upload was interrupted. Please try again.'))
+        xhr.send(file)
+      })
+
       uploadedPath = filePath
+      setUploadStage('processing')
+      notify({ type: 'loading', message: 'Upload complete. Saving media details...' })
 
       const { data: publicData } = supabase.storage
         .from('portfolio-media')
@@ -407,6 +461,11 @@ export default function AdminMediaPage() {
       notify({ type: 'error', message: `Upload failed: ${message}` })
     } finally {
       setUploading(false)
+      setUploadStage(null)
+      setUploadProgress(0)
+      setUploadBytesSent(0)
+      setUploadTotalBytes(0)
+      setUploadFileName('')
     }
   }
 
@@ -914,6 +973,62 @@ export default function AdminMediaPage() {
           </div>
         </section>
       </div>
+
+      {uploading && (
+        <section
+          className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 sm:p-5"
+          aria-live="polite"
+          aria-label="File upload progress"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="rounded-xl bg-blue-100 p-2.5 text-blue-700">
+                {uploadStage === 'processing' ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Upload className="h-5 w-5" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-slate-900">
+                  {uploadStage === 'processing' ? 'Finalizing upload' : 'Uploading file'}
+                </p>
+                <p className="mt-0.5 max-w-full break-all text-xs text-slate-600">
+                  {uploadFileName}
+                </p>
+              </div>
+            </div>
+            <p className="shrink-0 text-lg font-bold tabular-nums text-blue-700">
+              {uploadStage === 'processing' ? '100%' : `${uploadProgress}%`}
+            </p>
+          </div>
+
+          <div
+            className="mt-4 h-2.5 overflow-hidden rounded-full bg-blue-100"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={uploadStage === 'processing' ? 100 : uploadProgress}
+            aria-label="Upload progress"
+          >
+            <div
+              className="h-full rounded-full bg-blue-600 transition-[width] duration-200 ease-out"
+              style={{ width: `${uploadStage === 'processing' ? 100 : uploadProgress}%` }}
+            />
+          </div>
+
+          <div className="mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-slate-600">
+            <span>
+              {formatBytes(uploadBytesSent)} of {formatBytes(uploadTotalBytes)}
+            </span>
+            <span>
+              {uploadStage === 'processing'
+                ? 'Saving the media record…'
+                : 'Keep this page open until the upload finishes.'}
+            </span>
+          </div>
+        </section>
+      )}
 
       <section className="space-y-4">
         <div className="space-y-4">
