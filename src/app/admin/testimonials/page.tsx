@@ -6,12 +6,24 @@ import { FeedbackAlert } from '@/components/admin/FeedbackAlert'
 import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal'
 import { MessageSquareQuote, RefreshCw, Check, X, Pencil, Trash2, Star } from 'lucide-react'
 
+const TESTIMONIAL_CATEGORIES = [
+  'Solutions & Technology',
+  'Projects & Collaboration',
+  'Research & Academic',
+  'Teaching & Mentorship',
+  'Leadership & Community',
+  'Professional Excellence',
+  'Other',
+] as const
+
 type Testimonial = {
   id: string
   client_name: string
   professional_title: string | null
   organization: string | null
   relationship: string | null
+  location: string | null
+  category: string
   message: string
   photo_url: string | null
   status: 'pending' | 'approved' | 'rejected'
@@ -21,8 +33,15 @@ type Testimonial = {
 }
 
 const emptyForm = {
-  client_name: '', professional_title: '', organization: '',
-  relationship: '', message: '', photo_url: '', display_order: 0
+  client_name: '',
+  professional_title: '',
+  organization: '',
+  relationship: '',
+  location: '',
+  category: 'Other',
+  message: '',
+  photo_url: '',
+  display_order: 0,
 }
 
 export default function AdminTestimonialsPage() {
@@ -39,7 +58,7 @@ export default function AdminTestimonialsPage() {
     setLoading(true)
     const { data, error } = await supabase.from('testimonials').select('*').order('submitted_at', { ascending: false })
     if (error) setFeedback({ type: 'error', message: `Could not load testimonials: ${error.message}` })
-    else setItems((data || []) as Testimonial[])
+    else setItems((data || []).map((item) => ({ ...item, category: item.category || 'Other', location: item.location || null })) as Testimonial[])
     setLoading(false)
   }, [])
 
@@ -49,7 +68,7 @@ export default function AdminTestimonialsPage() {
     all: items.length,
     pending: items.filter(x => x.status === 'pending').length,
     approved: items.filter(x => x.status === 'approved').length,
-    rejected: items.filter(x => x.status === 'rejected').length
+    rejected: items.filter(x => x.status === 'rejected').length,
   }), [items])
 
   const visible = filter === 'all' ? items : items.filter(x => x.status === filter)
@@ -61,9 +80,11 @@ export default function AdminTestimonialsPage() {
       professional_title: item.professional_title || '',
       organization: item.organization || '',
       relationship: item.relationship || '',
+      location: item.location || '',
+      category: item.category || 'Other',
       message: item.message,
       photo_url: item.photo_url || '',
-      display_order: item.display_order || 0
+      display_order: item.display_order || 0,
     })
   }
 
@@ -76,8 +97,10 @@ export default function AdminTestimonialsPage() {
       professional_title: form.professional_title || null,
       organization: form.organization || null,
       relationship: form.relationship || null,
+      location: form.location.trim() || null,
+      category: form.category || 'Other',
       photo_url: form.photo_url || null,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     }).eq('id', editing.id)
     setSaving(false)
     if (error) setFeedback({ type: 'error', message: `Could not save changes: ${error.message}` })
@@ -149,14 +172,18 @@ export default function AdminTestimonialsPage() {
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${item.status === 'approved' ? 'bg-emerald-50 text-emerald-700' : item.status === 'rejected' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'}`}>{item.status}</span>
                     {item.featured && <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700"><Star size={11} /> Featured</span>}
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">{[item.professional_title, item.organization, item.relationship].filter(Boolean).join(' · ') || 'No additional details'}</p>
+                  <p className="mt-1 text-xs text-slate-500">{[item.professional_title, item.organization, item.relationship, item.location].filter(Boolean).join(' · ') || 'No additional details'}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-semibold text-indigo-700">{item.category || 'Other'}</span>
+                    {item.location && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">Location: {item.location}</span>}
+                  </div>
                   <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{item.message}</p>
                   <p className="mt-3 text-[11px] text-slate-400">Submitted {new Date(item.submitted_at).toLocaleString()}</p>
                 </div>
                 <div className="flex flex-wrap items-start gap-2 sm:max-w-[220px] sm:justify-end">
                   {item.status !== 'approved' && <button onClick={() => void setStatus(item, 'approved')} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700"><Check size={14} /> Approve</button>}
                   {item.status !== 'rejected' && <button onClick={() => void setStatus(item, 'rejected')} className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50"><X size={14} /> Reject</button>}
-                  <button onClick={() => toggleFeatured(item)} disabled={item.status !== 'approved'} className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-40"><Star size={14} /> {item.featured ? 'Unfeature' : 'Feature'}</button>
+                  <button onClick={() => void toggleFeatured(item)} disabled={item.status !== 'approved'} className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-40"><Star size={14} /> {item.featured ? 'Unfeature' : 'Feature'}</button>
                   <button onClick={() => startEdit(item)} className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50" aria-label="Edit testimonial"><Pencil size={15} /></button>
                   <button onClick={() => setDeleting(item)} className="rounded-lg border border-rose-100 p-2 text-rose-600 hover:bg-rose-50" aria-label="Delete testimonial"><Trash2 size={15} /></button>
                 </div>
@@ -175,6 +202,8 @@ export default function AdminTestimonialsPage() {
               <label className="text-xs font-semibold text-slate-700">Professional title<input value={form.professional_title} onChange={e => setForm({ ...form, professional_title: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" /></label>
               <label className="text-xs font-semibold text-slate-700">Organisation<input value={form.organization} onChange={e => setForm({ ...form, organization: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" /></label>
               <label className="text-xs font-semibold text-slate-700">Relationship<input value={form.relationship} onChange={e => setForm({ ...form, relationship: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" /></label>
+              <label className="text-xs font-semibold text-slate-700">Location<input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="City, State or Country" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" /></label>
+              <label className="text-xs font-semibold text-slate-700">Category<select required value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm">{TESTIMONIAL_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}</select></label>
               <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Photo URL<input type="url" value={form.photo_url} onChange={e => setForm({ ...form, photo_url: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" /></label>
               <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Message<textarea required rows={5} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" /></label>
               <label className="text-xs font-semibold text-slate-700">Display order<input type="number" value={form.display_order} onChange={e => setForm({ ...form, display_order: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm" /></label>

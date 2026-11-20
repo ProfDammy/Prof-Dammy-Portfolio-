@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Manrope, Inter } from 'next/font/google'
 import { supabase } from '@/lib/supabaseClient'
 import { Quote, Star } from 'lucide-react'
@@ -17,6 +17,16 @@ const inter = Inter({
   display: 'swap',
 })
 
+const TESTIMONIAL_CATEGORIES = [
+  'Solutions & Technology',
+  'Projects & Collaboration',
+  'Research & Academic',
+  'Teaching & Mentorship',
+  'Leadership & Community',
+  'Professional Excellence',
+  'Other',
+] as const
+
 type Testimonial = {
   id: string
   client_name: string
@@ -24,6 +34,7 @@ type Testimonial = {
   organization: string | null
   relationship: string | null
   location: string | null
+  category: string
   message: string
   photo_url: string | null
 }
@@ -122,6 +133,7 @@ function MarqueeRow({
 export default function TestimonialsSection() {
   const [items, setItems] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<string>('All')
 
   useEffect(() => {
     let alive = true
@@ -129,30 +141,52 @@ export default function TestimonialsSection() {
     const load = async () => {
       const { data, error } = await supabase
         .from('testimonials')
-        .select('id, client_name, professional_title, organization, relationship, location, message, photo_url')
+        .select('id, client_name, professional_title, organization, relationship, location, category, message, photo_url')
         .eq('status', 'approved')
         .order('featured', { ascending: false })
         .order('display_order', { ascending: true })
         .order('submitted_at', { ascending: false })
 
       if (!alive) return
-      if (!error) setItems((data || []) as Testimonial[])
+
+      if (!error) {
+        setItems(
+          (data || []).map((item) => ({
+            ...item,
+            category: item.category || 'Other',
+          })) as Testimonial[],
+        )
+      }
+
       setLoading(false)
     }
 
-    load()
+    void load()
 
     return () => {
       alive = false
     }
   }, [])
 
-  const hasTwoRows = items.length >= 4
+  const availableCategories = useMemo(
+    () =>
+      TESTIMONIAL_CATEGORIES.filter((category) =>
+        items.some((item) => item.category === category),
+      ),
+    [items],
+  )
+
+  const filteredItems =
+    selectedCategory === 'All'
+      ? items
+      : items.filter((item) => item.category === selectedCategory)
+
+  const hasTwoRows = filteredItems.length >= 4
   const firstRow = hasTwoRows
-    ? items.filter((_, index) => index % 2 === 0)
-    : items
+    ? filteredItems.filter((_, index) => index % 2 === 0)
+    : filteredItems
   const secondRow = hasTwoRows
-    ? items.filter((_, index) => index % 2 === 1).reverse()
+    ? filteredItems.filter((_, index) => index % 2 === 1).reverse()
     : []
 
   return (
@@ -161,13 +195,13 @@ export default function TestimonialsSection() {
       className={`${manrope.variable} ${inter.variable} testimonial-section overflow-hidden bg-slate-50/70 py-16 md:py-20`}
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto mb-10 max-w-3xl px-5 text-center sm:px-8">
+        <div className="mx-auto mb-8 max-w-3xl px-5 text-center sm:px-8">
           <span className="testimonial-body inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-blue-700">
             <Star className="h-4 w-4" /> Testimonials
           </span>
 
           <h2 className="testimonial-heading mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
-            What people say
+            {selectedCategory === 'All' ? 'What people say' : selectedCategory}
           </h2>
 
           <p className="testimonial-body mt-4 text-base leading-7 text-slate-600">
@@ -175,11 +209,34 @@ export default function TestimonialsSection() {
           </p>
         </div>
 
+        {!loading && items.length > 0 && (
+          <div
+            className="testimonial-body mb-8 flex flex-wrap justify-center gap-2 px-5 sm:px-8"
+            aria-label="Filter testimonials by category"
+          >
+            {['All', ...availableCategories].map((category) => (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setSelectedCategory(category)}
+                aria-pressed={selectedCategory === category}
+                className={`rounded-full border px-4 py-2 text-xs font-semibold transition sm:text-sm ${
+                  selectedCategory === category
+                    ? 'border-blue-700 bg-blue-700 text-white shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <div className="testimonial-body px-5 py-10 text-center text-sm text-slate-500">
             Loading testimonials…
           </div>
-        ) : items.length > 0 ? (
+        ) : filteredItems.length > 0 ? (
           <div className="space-y-4">
             <MarqueeRow
               items={firstRow}
@@ -196,7 +253,9 @@ export default function TestimonialsSection() {
           </div>
         ) : (
           <div className="testimonial-body mx-5 rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500 sm:mx-8">
-            Testimonials will appear here as they are approved.
+            {items.length === 0
+              ? 'Testimonials will appear here as they are approved.'
+              : 'There are no approved testimonials in this category yet.'}
           </div>
         )}
       </div>
